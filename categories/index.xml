@@ -1,0 +1,35 @@
+
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+ <channel>
+   <title>Categories on Victor Popoola</title>
+   <link>https://VictorXLR.me/categories/</link>
+   <description>Recent content in Categories on Victor Popoola</description>
+   <generator>Hugo -- gohugo.io</generator>
+   <language>en-us</language>
+   <managingEditor>hello@victorxlr.me (Victor Popoola)</managingEditor>
+   <webMaster>hello@victorxlr.me (Victor Popoola)</webMaster>
+   <copyright>Copyright &amp;copy; 2019 - Victor Popoola</copyright>
+   <lastBuildDate>Wed, 01 Jan 2020 00:00:00 +0000</lastBuildDate>
+   
+       <atom:link href="https://VictorXLR.me/categories/index.xml" rel="self" type="application/rss+xml" />
+   
+   
+     <item>
+       <title>Hello Internet</title>
+       <link>https://VictorXLR.me/posts/hello/</link>
+       <pubDate>Wed, 01 Jan 2020 00:00:00 +0000</pubDate>
+       <author>hello@victorxlr.me (Victor Popoola)</author>
+       <guid>https://VictorXLR.me/posts/hello/</guid>
+       <description>&lt;p&gt;This is the first post published utilizing the Hugo static site generator on the 31st of december 2019. I decided to make a blog and focus on writing about my interests, thoughts and cement a place for me on the internet.&lt;/p&gt;
+&lt;p&gt;My Interests are very tech focus and I enjoy coding, anime, action movies and comic books. I am the first of 3 brothers and I plan to work for a company data focused like Twitter or start my own.&lt;/p&gt;
+&lt;p&gt;I used the Hugo-Kiera theme for my website but i had to modify it so i could use a light theme.&lt;/p&gt;
+&lt;p&gt;This is what my old website used to look like. I used Vue.js
+&lt;img src=&#34;https://VictorXLR.me/images/site-old.png&#34; alt=&#34;Old Website&#34;&gt;&lt;/p&gt;
+&lt;p&gt;Feel free to follow me on my social media:&lt;/p&gt;
+&lt;p&gt;Twitter: @VicXLR&lt;/p&gt;
+&lt;p&gt;Instagram: @vie.tor&lt;/p&gt;
+</description>
+     </item>
+   
+ </channel>
+</rss>
