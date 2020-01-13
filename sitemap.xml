@@ -24,7 +24,17 @@
   
   <url>
     <loc>https://VictorXLR.me/posts/</loc>
-    <lastmod>2020-01-01T00:00:00+00:00</lastmod>
+    <lastmod>2020-01-12T21:21:16-04:00</lastmod>
+  </url>
+  
+  <url>
+    <loc>https://VictorXLR.me/posts/learninghaskell/</loc>
+    <lastmod>2020-01-12T21:21:16-04:00</lastmod>
+  </url>
+  
+  <url>
+    <loc>https://VictorXLR.me/</loc>
+    <lastmod>2020-01-12T21:21:16-04:00</lastmod>
   </url>
   
   <url>
@@ -59,11 +69,6 @@
   
   <url>
     <loc>https://VictorXLR.me/tags/</loc>
-    <lastmod>2020-01-01T00:00:00+00:00</lastmod>
-  </url>
-  
-  <url>
-    <loc>https://VictorXLR.me/</loc>
     <lastmod>2020-01-01T00:00:00+00:00</lastmod>
   </url>
   
