@@ -3,23 +3,13 @@
   xmlns:xhtml="http://www.w3.org/1999/xhtml">
   
   <url>
+    <loc>https://VictorXLR.me/about/</loc>
+    <lastmod>2020-01-12T00:00:00+00:00</lastmod>
+  </url>
+  
+  <url>
     <loc>https://VictorXLR.me/resume/</loc>
     <lastmod>2020-01-01T00:00:00+00:00</lastmod>
-  </url>
-  
-  <url>
-    <loc>https://VictorXLR.me/projects/</loc>
-    <lastmod>2019-01-01T00:00:00+00:00</lastmod>
-  </url>
-  
-  <url>
-    <loc>https://VictorXLR.me/interests/</loc>
-    <lastmod>2020-01-01T00:00:00+00:00</lastmod>
-  </url>
-  
-  <url>
-    <loc>https://VictorXLR.me/current/</loc>
-    <lastmod>2019-12-31T00:00:00+00:00</lastmod>
   </url>
   
   <url>
@@ -28,7 +18,22 @@
   </url>
   
   <url>
+    <loc>https://VictorXLR.me/tags/functional-programming/</loc>
+    <lastmod>2020-01-12T21:21:16-04:00</lastmod>
+  </url>
+  
+  <url>
+    <loc>https://VictorXLR.me/tags/haskell/</loc>
+    <lastmod>2020-01-12T21:21:16-04:00</lastmod>
+  </url>
+  
+  <url>
     <loc>https://VictorXLR.me/posts/learninghaskell/</loc>
+    <lastmod>2020-01-12T21:21:16-04:00</lastmod>
+  </url>
+  
+  <url>
+    <loc>https://VictorXLR.me/tags/</loc>
     <lastmod>2020-01-12T21:21:16-04:00</lastmod>
   </url>
   
@@ -64,11 +69,6 @@
   
   <url>
     <loc>https://VictorXLR.me/tags/new/</loc>
-    <lastmod>2020-01-01T00:00:00+00:00</lastmod>
-  </url>
-  
-  <url>
-    <loc>https://VictorXLR.me/tags/</loc>
     <lastmod>2020-01-01T00:00:00+00:00</lastmod>
   </url>
   

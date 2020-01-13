@@ -9,18 +9,19 @@
    <managingEditor>hello@victorxlr.me (Victor Popoola)</managingEditor>
    <webMaster>hello@victorxlr.me (Victor Popoola)</webMaster>
    <copyright>Copyright &amp;copy; 2019 - Victor Popoola</copyright>
-   <lastBuildDate>Wed, 01 Jan 2020 00:00:00 +0000</lastBuildDate>
+   <lastBuildDate>Sun, 12 Jan 2020 21:21:16 -0400</lastBuildDate>
    
        <atom:link href="https://VictorXLR.me/tags/index.xml" rel="self" type="application/rss+xml" />
    
    
      <item>
-       <title>Starting out With Haskell</title>
+       <title>Starting Out With Haskell</title>
        <link>https://VictorXLR.me/posts/learninghaskell/</link>
        <pubDate>Sun, 12 Jan 2020 21:21:16 -0400</pubDate>
        <author>hello@victorxlr.me (Victor Popoola)</author>
        <guid>https://VictorXLR.me/posts/learninghaskell/</guid>
-       <description>&lt;p&gt;My plan for January 2020 is to learn the haskell programming language. I am using the book (Learn You a Haskell)[http://learnyouahaskell.com/] by Miran Lipovaca. Majority of the content here are my notes and writeups from her website.&lt;/p&gt;
+       <description>&lt;p&gt;My plan for January was to learn the Haskell programming language. Currently using the book (Learn You a Haskell)[http://learnyouahaskell.com/] by Miran Lipovaca. Majority of the content here are my notes and writeups from her website.&lt;/p&gt;
+&lt;p&gt;These are my writeups so far,  Will update sooner with a better post&lt;/p&gt;
 &lt;h2 id=&#34;introduction-to-haskell&#34;&gt;Introduction to Haskell&lt;/h2&gt;
 &lt;p&gt;ghci - glascow haskell compiler interactive?&lt;/p&gt;
 &lt;ul&gt;
