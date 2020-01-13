@@ -87,7 +87,7 @@ or definitions: &lt;code&gt;conanO&#39;Brien = &amp;quot;It&#39;s a-me, Conan O&
 &lt;li&gt;Functions cannot begin with uppercase letters&lt;/li&gt;
 &lt;/ul&gt;
 &lt;h3 id=&#34;lists&#34;&gt;Lists&lt;/h3&gt;
-&lt;p&gt;Lists are the most used data structure.. they exist in all major programming languages.In haskell, they are homogenous, can only store data of the same type. Hence you cant have character, ints in the same list.&lt;/p&gt;
+&lt;p&gt;Lists are the most used data structure. they exist in all major programming languages.In haskell, they are homogenous, can only store data of the same type. Hence you cant have character, ints in the same list.&lt;/p&gt;
 &lt;p&gt;Strings are lists of characters&lt;/p&gt;
 &lt;div class=&#34;highlight&#34;&gt;&lt;pre style=&#34;color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4&#34;&gt;&lt;code class=&#34;language-hs&#34; data-lang=&#34;hs&#34;&gt;&lt;span style=&#34;color:#66d9ef&#34;&gt;let&lt;/span&gt; lostNumbers &lt;span style=&#34;color:#f92672&#34;&gt;=&lt;/span&gt; [&lt;span style=&#34;color:#ae81ff&#34;&gt;4&lt;/span&gt;, &lt;span style=&#34;color:#ae81ff&#34;&gt;8&lt;/span&gt;, &lt;span style=&#34;color:#ae81ff&#34;&gt;12&lt;/span&gt;, &lt;span style=&#34;color:#ae81ff&#34;&gt;16&lt;/span&gt;, &lt;span style=&#34;color:#ae81ff&#34;&gt;20&lt;/span&gt;, &lt;span style=&#34;color:#ae81ff&#34;&gt;24&lt;/span&gt;, &lt;span style=&#34;color:#ae81ff&#34;&gt;28&lt;/span&gt;, &lt;span style=&#34;color:#ae81ff&#34;&gt;32&lt;/span&gt;]
 &lt;span style=&#34;color:#a6e22e&#34;&gt;lostNumbers&lt;/span&gt;
@@ -125,11 +125,11 @@ Indexes of lists start at 0.
 &lt;li&gt;Init: returns a list without the last element of the list&lt;/li&gt;
 &lt;/ul&gt;
 &lt;blockquote&gt;
-&lt;p&gt;Do not use these functions on empty lists.. it blows up in your face..
+&lt;p&gt;Do not use these functions on empty lists. it blows up in your face.
 &lt;img src=&#34;https://s3.amazonaws.com/lyah/listmonster.png&#34; alt=&#34;Resource&#34;&gt;&lt;/p&gt;
 &lt;/blockquote&gt;
 &lt;ul&gt;
-&lt;li&gt;Length: returns the length of a list..&lt;/li&gt;
+&lt;li&gt;Length: returns the length of a list.&lt;/li&gt;
 &lt;li&gt;null: checks if a list is empty, or &lt;code&gt;lst == []&lt;/code&gt;&lt;/li&gt;
 &lt;li&gt;reverse: reverse a list&lt;/li&gt;
 &lt;li&gt;take: takes a number and a list, extracts that many eelements from the beginning of the list.&lt;/li&gt;
