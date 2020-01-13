@@ -18,12 +18,32 @@
   </url>
   
   <url>
+    <loc>https://VictorXLR.me/categories/</loc>
+    <lastmod>2020-01-12T21:21:16-04:00</lastmod>
+  </url>
+  
+  <url>
+    <loc>https://VictorXLR.me/categories/code/</loc>
+    <lastmod>2020-01-12T21:21:16-04:00</lastmod>
+  </url>
+  
+  <url>
+    <loc>https://VictorXLR.me/categories/development/</loc>
+    <lastmod>2020-01-12T21:21:16-04:00</lastmod>
+  </url>
+  
+  <url>
     <loc>https://VictorXLR.me/tags/functional-programming/</loc>
     <lastmod>2020-01-12T21:21:16-04:00</lastmod>
   </url>
   
   <url>
     <loc>https://VictorXLR.me/tags/haskell/</loc>
+    <lastmod>2020-01-12T21:21:16-04:00</lastmod>
+  </url>
+  
+  <url>
+    <loc>https://VictorXLR.me/categories/programming/</loc>
     <lastmod>2020-01-12T21:21:16-04:00</lastmod>
   </url>
   
@@ -40,11 +60,6 @@
   <url>
     <loc>https://VictorXLR.me/</loc>
     <lastmod>2020-01-12T21:21:16-04:00</lastmod>
-  </url>
-  
-  <url>
-    <loc>https://VictorXLR.me/categories/</loc>
-    <lastmod>2020-01-01T00:00:00+00:00</lastmod>
   </url>
   
   <url>

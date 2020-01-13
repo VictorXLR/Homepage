@@ -1,17 +1,17 @@
 
 <rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
  <channel>
-   <title>hugo on Victor Popoola</title>
-   <link>https://VictorXLR.me/tags/hugo/</link>
-   <description>Recent content in hugo on Victor Popoola</description>
+   <title>development on Victor Popoola</title>
+   <link>https://VictorXLR.me/categories/development/</link>
+   <description>Recent content in development on Victor Popoola</description>
    <generator>Hugo -- gohugo.io</generator>
    <language>en-us</language>
    <managingEditor>hello@victorxlr.me (Victor Popoola)</managingEditor>
    <webMaster>hello@victorxlr.me (Victor Popoola)</webMaster>
    <copyright>Copyright &amp;copy; 2020 - Victor Popoola</copyright>
-   <lastBuildDate>Wed, 01 Jan 2020 00:00:00 +0000</lastBuildDate>
+   <lastBuildDate>Sun, 12 Jan 2020 21:21:16 -0400</lastBuildDate>
    
-       <atom:link href="https://VictorXLR.me/tags/hugo/index.xml" rel="self" type="application/rss+xml" />
+       <atom:link href="https://VictorXLR.me/categories/development/index.xml" rel="self" type="application/rss+xml" />
    
    
      <item>
