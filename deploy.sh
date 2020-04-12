@@ -43,5 +43,5 @@ if [ -n "$*" ]; then
 	msg="$*"
 fi
 git commit -m "deploy $msg"
-git push git@github.com:VictorXLR/victorxlr.github.io.git source
+git push -f git@github.com:VictorXLR/victorxlr.github.io.git source
 
