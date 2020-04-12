@@ -31,17 +31,26 @@ git push -f git@github.com:VictorXLR/victorxlr.github.io.git master
 
 cd - 
 
+# delete build directory
 printf "\033[0;32mDeleting Build Directory...\033[0m\n"
-
 rm -rf pages
 
 # Add changes to git.
 git config core.autocrlf true
 git add -A 
-msg="saving site $(date)"
+
+# create commit message
+printf "\033[0;32mAdding to Git...\033[0m\n"
+msg="source code site $(date)"
 if [ -n "$*" ]; then
 	msg="$*"
 fi
-git commit -m "deploy $msg"
-git push -f git@github.com:VictorXLR/victorxlr.github.io.git source
 
+printf "\033[0;32mDeleting Build Directory...\033[0m\n"
+git commit -m "deploy $msg"
+
+# pushing to remote
+git push git@github.com:VictorXLR/victorxlr.github.io.git source
+
+
+printf "\033[0;32mSuccessfully deployed to Source branch...\033[0m\n"
