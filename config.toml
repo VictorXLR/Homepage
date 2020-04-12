@@ -1,0 +1,29 @@
+baseURL = "https://VictorXLR.me/"
+languageCode = "en-us"
+title = "Victor Popoola"
+copyright = "Copyright &copy; 2020 - Victor Popoola"
+canonifyurls = true
+theme = "hugo-kiera"
+
+summaryLength = 30
+enableEmoji = true
+
+pygmentsCodeFences = true
+
+paginate = 10
+googleAnalytics = "" 
+
+[author]
+name = "Victor Popoola"          
+email = "hello@victorxlr.me"
+github = "VictorXLR"   
+linkedin = "victor-popoola"     
+twitter = "MingleGod"       
+instagram = "vie.tor" 
+keybase="victorxlr"
+
+[params]
+tagline = "Quotes, Stories and Writeups.. A lot I guess"
+description = "Personal Website and Blog of Victor Popoola"
+
+
