@@ -7,7 +7,7 @@ meta:
   - name: About Me
     content: About
   - name: keywords
-    content: victor about popoola
+    content: About me
 ---
 
 ## About Me
@@ -25,6 +25,7 @@ This blog will tend to be unstructured covering my interests, work and other int
 ## Social Media
 
 <Button title="Instagram" url="https://instagram.com/vie.tor/"/>
+<Button title="Twitter" url="https://twitter.com/victorXLR/"/>
 <Button title="Linkedln" url="https://www.linkedin.com/in/victor-popoola/"/>
 <Button title="Keybase" url="https://keybase.io/victorxlr"/>
 <Button title="Coffee" url="https://www.buymeacoffee.com/victorxlr"/>
