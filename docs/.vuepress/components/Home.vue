@@ -2,6 +2,7 @@
   <div class="container">
     <router-link to="/about" class="button--green">About Me</router-link>
     <router-link to="/now" class="button--green">Now</router-link>
+    <router-link to="/cheatbook" class="button--green">Cheat Sheet</router-link>
     <router-link to="/resume" class="button--green">Resume</router-link>
     <router-link to="/blog" class="button--green">Blog</router-link>
     <router-link to="/code" class="button--green">Projects</router-link>
