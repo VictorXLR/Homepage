@@ -1,21 +1,40 @@
 <template>
-  <div class="container">
-    <ul>
-      <li v-for="value in posts()">{{ value }}</li>
-    </ul>
-  </div>
+ <router-link :to="to">
+   <article>
+     <div class="title">{{ title }}</div>
+
+      <div class="date">{{ date.getFullYear() }}/{{ date.getMonth() + 1 }}/{{ date.getDate() }}</div>
+      <div class="description">{{ description }}</div>
+   </article>
+ </router-link>
 </template>
 
 <script>
 export default {
-  methods: {
-    posts() {
-      return this.$site.pages.filter(page => page.path.startsWith("/blog/"));
-    }
-  }
+  props: ["title", "to", "date", "description"],
 };
 </script>
-</script>
 
-<style>
+<style scoped>
+article {
+    color: #2c3e50;
+    padding: 16px;
+    border-top: 1px solid #eaecef;
+}
+
+article:hover {
+    color: #3eaf7c;
+}
+
+.title {
+    font-weight: bold;
+    margin-bottom: 8px
+}
+.date {
+    font-size: small;
+    font-style: italic;
+    margin-bottom: 4px
+}
+.description {
+}
 </style>

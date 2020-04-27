@@ -18,3 +18,4 @@ Take a look at my other links to get a much better picture
 
 ::: tip CODE
 Take a look at [Projects](./about#Projects) and  [Code](./code)
+

@@ -15,13 +15,11 @@
 export default {};
 </script>
 
-
-
 <style>
 html {
   font-family: "Source Sans Pro", -apple-system, BlinkMacSystemFont, "Segoe UI",
     Roboto, "Helvetica Neue", Arial, sans-serif;
-  font-size: 16px;
+  font-size: 14px;
   word-spacing: 1px;
   -ms-text-size-adjust: 100%;
   -webkit-text-size-adjust: 100%;
@@ -48,6 +46,8 @@ html {
 .button--green {
   display: inline-block;
   border-radius: 4px;
+  font-size: 14px;
+
   border: 1px solid #3b8070;
   color: #3b8070;
   text-decoration: none;
