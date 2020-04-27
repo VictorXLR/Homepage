@@ -1,7 +1,9 @@
 # Cheatbook
-Interesting commands I use
+
+> Document everything, nothing is learnt is useless
 
 ## Bash
+
 My PS1
 ```bash
 'PS1="\[\033[38;5;081m\]\u\[\033[38;5;245m\]@\[\033[38;5;206m\]\H \[\033[38;5;245m\]\w \[\033[38;5;081m\]# \[\e[0m\]"'

@@ -1,9 +1,7 @@
 ## Now
-
-(This is a now page, and if you have your own site, you should make one, too.) 
-
-https://nownownow.com/about
-
+::: details COLD STORAGE
+The content here is regarded as cold storage, its not updated regularly, consider following me on instagram.
+:::
 ## Home
 - Im writing this site, This is my third iteration and hopefully final iteration of this blog, I want to use it to host a lot more fun projects and just genuinely write more code.
 - I used Vue.js because its fun to learn, a lot more easy to learn and the Vuepress documentation is awesome. It just felt right and im glad i stuck to it
@@ -28,3 +26,5 @@ https://nownownow.com/about
     Bleach
     Boku No Hero Academia
     
+
+> Update: April 26th 2020

@@ -1,8 +1,8 @@
 ---
 title: Hello World
-description: Hello World, Test Site 
+description: Hello World
 draft: false
-date: '2020-01-01'
+date: '2020-01-01T17:37:43Z'
 ---
 
 # Hello World

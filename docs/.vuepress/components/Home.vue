@@ -2,12 +2,9 @@
   <div class="container">
     <router-link to="/about" class="button--green">About Me</router-link>
     <router-link to="/now" class="button--green">Now</router-link>
-    <router-link to="/cheatbook" class="button--green">Cheat Sheet</router-link>
     <router-link to="/resume" class="button--green">Resume</router-link>
-    <router-link to="/blog" class="button--green">Blog</router-link>
-    <router-link to="/code" class="button--green">Projects</router-link>
-    <br />
-    <br />
+    <router-link to="/about#Projects" class="button--green">Projects</router-link>
+    <router-link to="/cheatbook" class="button--green">Cheat Sheet</router-link>
   </div>
 </template>
 
@@ -37,7 +34,8 @@ html {
 .container {
   margin: 0 auto;
   display: flex;
-  padding-top: 3em;
+  padding-top: 2em;
+  padding-bottom: 2em;
   justify-content: center;
   align-items: center;
   text-align: center;
@@ -46,8 +44,6 @@ html {
 .button--green {
   display: inline-block;
   border-radius: 4px;
-  font-size: 14px;
-
   border: 1px solid #3b8070;
   color: #3b8070;
   text-decoration: none;

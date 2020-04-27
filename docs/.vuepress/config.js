@@ -1,7 +1,6 @@
 module.exports = {
-    baseURL: "/",
     title: "Victor Popoola",
-    description: "Just playing about",
+    description: "a static site {for, by, about} me",
     dest: 'pages',
 
     themeConfig: {
