@@ -18,7 +18,6 @@ I am still in the process of putting things together, so this page is a bit unst
 As of right now, im working on my Honors and also searching for a full time job by the end of summer 2020.
 
 This blog will tend to be unstructured covering my interests, work and other interesting topics.
-> If you are interested in hiring me full time. My Inbox is open
 
 ---
 

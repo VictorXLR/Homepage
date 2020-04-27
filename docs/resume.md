@@ -29,6 +29,13 @@ Android Development, Web Development, Backend and Frontend
 
 ### Work History
 ----
+#### Full Stack Developer 
+- January 2020 - March 2020
+- [Institiute for Big Data Analytics](https://bigdata.cs.dal.ca/), Dalhousie University, Halifax, NS
+  - Implemented functionality for interacting with third party Api's in a Django project.
+  
+  - Fixed bugs and wrote new features for existing company & research projects, creating functionality that significantly improved web functionality and speed.
+
 
 #### Software Developer
 - April 2019 - August 2019

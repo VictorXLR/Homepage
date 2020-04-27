@@ -45,6 +45,7 @@ docker run -d -p 27017-27019:27017-27019 --name mongodb mongo
 > Share port 27017-27019 between host and container and give name mongodb
 > d: detach, i.e. run in background
 
+The same logic applies for mySQL and other containers, 
 
 Connect to container `mongodb` with bash terminal 
 ```bash
