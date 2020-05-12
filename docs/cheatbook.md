@@ -2,6 +2,13 @@
 
 > Document everything, nothing is learnt is useless
 
+## CMD
+
+Maxed out CMD
+```
+wmic process call create cmd
+```
+
 ## Bash
 
 My PS1
