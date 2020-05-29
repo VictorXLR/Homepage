@@ -9,6 +9,7 @@ printf "\033[0;32mDeploying updates to GitHub...\033[0m\n"
 yarn build # if using a theme, replace with `hugo -t <YOURTHEME>`
 
 # Go To Public folder
+cp ./docs/Resume.pdf pages/
 cd pages
 
 #custom domain
