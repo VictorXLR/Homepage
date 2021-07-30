@@ -38,10 +38,10 @@ html {
 
 .linkelement {
   display: block;
-  font-size: 5rem;
+  font-size: 10vw;
   text-decoration: none;
   color: #000000;
- padding: 5% 5%;
+ padding: 2% 0  2% 0 ;
 }
 
 .linkelement:hover {
