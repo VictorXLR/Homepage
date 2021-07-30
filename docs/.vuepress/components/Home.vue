@@ -38,7 +38,7 @@ html {
 
 .linkelement {
   display: block;
-  font-size: 10vw;
+  font-size: 8vw;
   text-decoration: none;
   color: #000000;
  padding: 2% 0  2% 0 ;
