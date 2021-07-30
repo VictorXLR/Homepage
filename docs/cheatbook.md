@@ -1,7 +1,4 @@
 # Cheatbook
-
-> Document everything, nothing is learnt is useless
-
 ## CMD
 
 Maxed out CMD

@@ -1,10 +1,10 @@
 <template>
   <div class="container">
-    <router-link to="/about" class="button--green">About Me</router-link>
-    <router-link to="/now" class="button--green">Now</router-link>
-    <router-link to="/resume" class="button--green">Resume</router-link>
-    <router-link to="/about#Projects" class="button--green">Projects</router-link>
-    <router-link to="/cheatbook" class="button--green">Cheat Sheet</router-link>
+    <router-link to="/about" class="linkelement">About Me</router-link>
+    <router-link to="/now" class="linkelement">Now</router-link>
+    <router-link to="/resume" class="linkelement">Resume</router-link>
+    <router-link to="/about#Projects" class="linkelement">Projects</router-link>
+    <router-link to="/cheatbook" class="linkelement">Cheat Sheet</router-link>
   </div>
 </template>
 
@@ -32,27 +32,21 @@ html {
   margin: 0;
 }
 .container {
-  margin: 0 auto;
-  display: flex;
   padding-top: 2em;
   padding-bottom: 2em;
-  justify-content: center;
-  align-items: center;
-  text-align: center;
 }
 
-.button--green {
-  display: inline-block;
-  border-radius: 4px;
-  border: 1px solid #3b8070;
-  color: #3b8070;
+.linkelement {
+  display: block;
+  font-size: 5rem;
   text-decoration: none;
-  padding: 10px 30px;
+  color: #000000;
+ padding: 5% 5%;
 }
 
-.button--green:hover {
+.linkelement:hover {
   color: #fff;
-  background-color: #3b8070;
+  background-color: #40a4b8;
 }
 
 .button--grey {
