@@ -1,0 +1,45 @@
+body {
+    margin-top: 20%;
+    margin-left: 10%;
+    margin-right: 10%;
+    margin-bottom: 20%;
+    background-color: rgb(218, 233, 233);
+}
+
+.big_header {
+    font-size: 8em;
+}
+
+.social {
+    display: grid;
+    grid-template-columns: auto auto auto auto auto;
+    margin-bottom: 10%;
+}
+
+a {
+    font-size: 1.5em;
+    text-decoration: none;
+}
+
+.about {
+    font-size: 1.2em;
+}
+
+@media only screen and (max-width: 600px) {
+    body {
+        margin-top: 20%;
+        margin-left: 10%;
+        margin-right: 10%;
+        margin-bottom: 20%;
+        background-color: lightblue;
+    }
+
+    .big_header {
+        font-size: 5em;
+    }
+
+    a {
+        font-size: 1em;
+        text-decoration: none;
+    }
+}
