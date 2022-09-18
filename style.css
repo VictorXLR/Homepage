@@ -1,11 +1,22 @@
 body {
-    margin-top: 20%;
+    margin-top: 10%;
     margin-left: 10%;
     margin-right: 10%;
-    margin-bottom: 20%;
-    background-color: rgb(218, 233, 233);
-}
+    margin-bottom: 10%;
+    background-color: lightblue;
 
+}
+.black-block {
+    margin-top: 20px;
+    margin-bottom: 20px;
+    background-color: black;
+    font-size: 5em;
+}
+hr {
+    margin-top: 20px;
+    margin-bottom: 20px;
+    border: 1px solid black;
+}
 .big_header {
     font-size: 8em;
 }
@@ -13,7 +24,6 @@ body {
 .social {
     display: grid;
     grid-template-columns: auto auto auto auto auto;
-    margin-bottom: 10%;
 }
 
 a {
