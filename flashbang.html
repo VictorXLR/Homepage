@@ -1,0 +1,279 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Flashbang UX - Screen Brightener</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            transition: background-color 0.3s ease;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        .controls {
+            position: fixed;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(0, 0, 0, 0.8);
+            backdrop-filter: blur(10px);
+            padding: 20px 30px;
+            border-radius: 15px;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            z-index: 1000;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+            transition: opacity 0.3s ease, transform 0.3s ease;
+        }
+
+        .controls.hidden {
+            opacity: 0;
+            transform: translateX(-50%) translateY(20px);
+            pointer-events: none;
+        }
+
+        .title {
+            color: white;
+            font-size: 18px;
+            font-weight: 600;
+            text-align: center;
+            letter-spacing: 1px;
+        }
+
+        .brightness-control {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .brightness-label {
+            color: white;
+            font-size: 14px;
+            min-width: 80px;
+        }
+
+        .slider {
+            flex: 1;
+            height: 6px;
+            border-radius: 3px;
+            background: rgba(255, 255, 255, 0.2);
+            outline: none;
+            -webkit-appearance: none;
+            appearance: none;
+        }
+
+        .slider::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: white;
+            cursor: pointer;
+            transition: transform 0.2s ease;
+        }
+
+        .slider::-webkit-slider-thumb:hover {
+            transform: scale(1.2);
+        }
+
+        .slider::-moz-range-thumb {
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: white;
+            cursor: pointer;
+            border: none;
+            transition: transform 0.2s ease;
+        }
+
+        .slider::-moz-range-thumb:hover {
+            transform: scale(1.2);
+        }
+
+        .buttons {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+        }
+
+        button {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .activate-btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .activate-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        .activate-btn.active {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+        }
+
+        .hide-controls-btn {
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+        }
+
+        .hide-controls-btn:hover {
+            background: rgba(255, 255, 255, 0.3);
+        }
+
+        .show-controls-btn {
+            position: fixed;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(0, 0, 0, 0.6);
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 8px;
+            font-size: 14px;
+            cursor: pointer;
+            z-index: 999;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s ease;
+        }
+
+        .show-controls-btn.visible {
+            opacity: 1;
+            pointer-events: all;
+        }
+
+        .show-controls-btn:hover {
+            background: rgba(0, 0, 0, 0.8);
+        }
+
+        @media (max-width: 600px) {
+            .controls {
+                width: 90%;
+                padding: 15px 20px;
+            }
+
+            .brightness-control {
+                flex-direction: column;
+                align-items: stretch;
+            }
+
+            .brightness-label {
+                min-width: auto;
+            }
+
+            .buttons {
+                flex-direction: column;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="controls" id="controls">
+        <div class="title">⚡ FLASHBANG UX</div>
+        <div class="brightness-control">
+            <span class="brightness-label">Brightness: <span id="brightnessValue">100</span>%</span>
+            <input type="range" min="50" max="100" value="100" class="slider" id="brightnessSlider">
+        </div>
+        <div class="buttons">
+            <button class="activate-btn" id="activateBtn">Activate</button>
+            <button class="hide-controls-btn" id="hideControlsBtn">Hide Controls</button>
+        </div>
+    </div>
+
+    <button class="show-controls-btn" id="showControlsBtn">Show Controls</button>
+
+    <script>
+        const body = document.body;
+        const brightnessSlider = document.getElementById('brightnessSlider');
+        const brightnessValue = document.getElementById('brightnessValue');
+        const activateBtn = document.getElementById('activateBtn');
+        const hideControlsBtn = document.getElementById('hideControlsBtn');
+        const showControlsBtn = document.getElementById('showControlsBtn');
+        const controls = document.getElementById('controls');
+
+        let isActive = false;
+
+        // Update brightness display
+        brightnessSlider.addEventListener('input', function() {
+            brightnessValue.textContent = this.value;
+            if (isActive) {
+                updateBrightness();
+            }
+        });
+
+        // Activate/Deactivate button
+        activateBtn.addEventListener('click', function() {
+            isActive = !isActive;
+            if (isActive) {
+                activateBtn.textContent = 'Deactivate';
+                activateBtn.classList.add('active');
+                updateBrightness();
+            } else {
+                activateBtn.textContent = 'Activate';
+                activateBtn.classList.remove('active');
+                body.style.backgroundColor = '#ffffff';
+            }
+        });
+
+        // Hide controls
+        hideControlsBtn.addEventListener('click', function() {
+            controls.classList.add('hidden');
+            setTimeout(() => {
+                showControlsBtn.classList.add('visible');
+            }, 300);
+        });
+
+        // Show controls
+        showControlsBtn.addEventListener('click', function() {
+            showControlsBtn.classList.remove('visible');
+            setTimeout(() => {
+                controls.classList.remove('hidden');
+            }, 100);
+        });
+
+        // Update brightness based on slider value
+        function updateBrightness() {
+            const brightness = brightnessSlider.value;
+            const rgbValue = Math.round((brightness / 100) * 255);
+            body.style.backgroundColor = `rgb(${rgbValue}, ${rgbValue}, ${rgbValue})`;
+        }
+
+        // Keyboard shortcuts
+        document.addEventListener('keydown', function(e) {
+            // Space bar to toggle
+            if (e.code === 'Space' && !controls.classList.contains('hidden')) {
+                e.preventDefault();
+                activateBtn.click();
+            }
+            // H to hide/show controls
+            if (e.code === 'KeyH') {
+                if (controls.classList.contains('hidden')) {
+                    showControlsBtn.click();
+                } else {
+                    hideControlsBtn.click();
+                }
+            }
+        });
+    </script>
+</body>
+</html>
