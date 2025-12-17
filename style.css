@@ -297,6 +297,24 @@ body {
 }
 
 @media (max-width: 768px) {
+    .nav {
+        padding: 1rem 3vw;
+    }
+    
+    .nav-logo {
+        font-size: 1.5rem;
+        padding: 0.3rem 0.8rem;
+    }
+    
+    .nav-links {
+        gap: 0.5rem;
+    }
+    
+    .nav-link {
+        padding: 0.3rem 0.8rem;
+        font-size: 0.8rem;
+    }
+    
     .projects-grid {
         grid-template-columns: 1fr;
     }
