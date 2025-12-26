@@ -78,6 +78,10 @@ body {
     box-shadow: 4px 4px 0px var(--border);
 }
 
+.nav-text-mobile {
+    display: none;
+}
+
 .nav-link:hover {
     background: var(--accent);
     transform: translate(-2px, -2px);
@@ -313,6 +317,14 @@ body {
     .nav-link {
         padding: 0.3rem 0.8rem;
         font-size: 0.8rem;
+    }
+    
+    .nav-text-desktop {
+        display: none;
+    }
+    
+    .nav-text-mobile {
+        display: inline;
     }
     
     .projects-grid {
