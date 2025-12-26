@@ -1,0 +1,258 @@
+<!doctype html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>Blood</title>
+        <style>
+            body,
+            html {
+                margin: 0;
+                padding: 0;
+                width: 100%;
+                height: 100%;
+                background-color: #000;
+                overflow: hidden;
+            }
+            canvas {
+                display: block;
+                width: 100vw;
+                height: 100vh;
+            }
+        </style>
+    </head>
+    <body>
+        <canvas id="glcanvas"></canvas>
+
+        <script id="vertex-shader" type="x-shader/x-vertex">
+            attribute vec2 a_position;
+            void main() {
+                gl_Position = vec4(a_position, 0.0, 1.0);
+            }
+        </script>
+
+        <script id="fragment-shader" type="x-shader/x-fragment">
+            #ifdef GL_ES
+            precision highp float;
+            #endif
+
+            uniform vec2 u_resolution;
+            uniform float u_time;
+
+            // --- NOISE FUNCTIONS ---
+            // A standard pseudo-random function
+            float random(in vec2 st) {
+                return fract(sin(dot(st.xy, vec2(12.9898,78.233))) * 43758.5453123);
+            }
+
+            // Value Noise: smooth interpolation between random values
+            float noise(in vec2 st) {
+                vec2 i = floor(st);
+                vec2 f = fract(st);
+
+                // Cubic Hermite Spline (smoothstep) for better flow than linear
+                f = f * f * (3.0 - 2.0 * f);
+
+                float a = random(i);
+                float b = random(i + vec2(1.0, 0.0));
+                float c = random(i + vec2(0.0, 1.0));
+                float d = random(i + vec2(1.0, 1.0));
+
+                return mix(a, b, f.x) +
+                       (c - a) * f.y * (1.0 - f.x) +
+                       (d - b) * f.x * f.y;
+            }
+
+            // Fractal Brownian Motion: layering noise to create detail
+            #define OCTAVES 6
+            float fbm(in vec2 st) {
+                float value = 0.0;
+                float amplitude = 0.5;
+                float frequency = 0.0;
+
+                // Loop to add layers of detail
+                for (int i = 0; i < OCTAVES; i++) {
+                    value += amplitude * noise(st);
+                    st *= 2.0;
+                    amplitude *= 0.5;
+                }
+                return value;
+            }
+
+            // --- THE "CONTROL" EFFECT ---
+            void main() {
+                vec2 st = gl_FragCoord.xy / u_resolution.xy;
+
+                // Aspect ratio correction to keep the fluid non-stretched
+                st.x *= u_resolution.x / u_resolution.y;
+
+                // Zoom out slightly to see more swirls
+                st *= 3.0;
+
+                // DOMAIN WARPING: The secret sauce
+                // Instead of sampling noise at 'st', we sample it at a distorted position.
+
+                vec2 q = vec2(0.0);
+                q.x = fbm(st + 0.00 * u_time);
+                q.y = fbm(st + vec2(1.0));
+
+                vec2 r = vec2(0.0);
+                // The "1.0 * u_time" controls the speed of the flow
+                r.x = fbm(st + 1.0 * q + vec2(1.7, 9.2) + 0.15 * u_time);
+                r.y = fbm(st + 1.0 * q + vec2(8.3, 2.8) + 0.126 * u_time);
+
+                // The final density value (f)
+                float f = fbm(st + r);
+
+                // --- COLOR GRADING ---
+                // We map the density 'f' to specific "Control" colors.
+                // Control uses deep blacks, bloody reds, and bright highlights.
+
+                vec3 color = vec3(0.0);
+
+                // Base: Deep dark red mixing with black
+                // We cube 'f' (f*f*f) to push more values toward black (contrast)
+                float contrast = f * f * f * f;
+
+                // 1. The dark red/black fluid
+                vec3 darkRed = vec3(0.5, 0.0, 0.0);
+
+                // 2. The bright red highlights
+                vec3 brightRed = vec3(1.0, 0.2, 0.1);
+
+                // 3. The "Hiss" resonance (almost white/orange hot spots)
+                vec3 highlight = vec3(1.0, 0.8, 0.6);
+
+                // Mix the colors based on the warped noise value
+                // Mix 1: Black to Dark Red
+                color = mix(vec3(0.0), darkRed, smoothstep(0.0, 0.5, f));
+
+                // Mix 2: Add Bright Red
+                color = mix(color, brightRed, smoothstep(0.4, 0.8, f));
+
+                // Mix 3: Add extreme highlights (very subtle)
+                color = mix(color, highlight, smoothstep(0.9, 1.0, f));
+
+                // Vignette: Darken the corners to give it that "loading screen" cinematic feel
+                vec2 uv = gl_FragCoord.xy / u_resolution.xy;
+                float dist = distance(uv, vec2(0.5));
+                color *= smoothstep(0.8, 0.2, dist * 0.8);
+
+                gl_FragColor = vec4(color, 1.0);
+            }
+        </script>
+
+        <script>
+            const canvas = document.getElementById("glcanvas");
+            const gl = canvas.getContext("webgl");
+
+            if (!gl) {
+                alert(
+                    "WebGL not supported, but it is required for this effect.",
+                );
+            }
+
+            // Resize canvas to fill screen
+            function resize() {
+                canvas.width = window.innerWidth;
+                canvas.height = window.innerHeight;
+                gl.viewport(0, 0, canvas.width, canvas.height);
+            }
+            window.addEventListener("resize", resize);
+            resize();
+
+            // Helper to compile shader
+            function createShader(gl, type, source) {
+                const shader = gl.createShader(type);
+                gl.shaderSource(shader, source);
+                gl.compileShader(shader);
+                if (!gl.getShaderParameter(shader, gl.COMPILE_STATUS)) {
+                    console.error(gl.getShaderInfoLog(shader));
+                    gl.deleteShader(shader);
+                    return null;
+                }
+                return shader;
+            }
+
+            // Helper to create program
+            function createProgram(gl, vertexSource, fragmentSource) {
+                const vertexShader = createShader(
+                    gl,
+                    gl.VERTEX_SHADER,
+                    vertexSource,
+                );
+                const fragmentShader = createShader(
+                    gl,
+                    gl.FRAGMENT_SHADER,
+                    fragmentSource,
+                );
+                const program = gl.createProgram();
+                gl.attachShader(program, vertexShader);
+                gl.attachShader(program, fragmentShader);
+                gl.linkProgram(program);
+                if (!gl.getProgramParameter(program, gl.LINK_STATUS)) {
+                    console.error(gl.getProgramInfoLog(program));
+                    return null;
+                }
+                return program;
+            }
+
+            const vsSource = document.getElementById("vertex-shader").text;
+            const fsSource = document.getElementById("fragment-shader").text;
+            const program = createProgram(gl, vsSource, fsSource);
+
+            const positionAttributeLocation = gl.getAttribLocation(
+                program,
+                "a_position",
+            );
+            const resolutionUniformLocation = gl.getUniformLocation(
+                program,
+                "u_resolution",
+            );
+            const timeUniformLocation = gl.getUniformLocation(
+                program,
+                "u_time",
+            );
+
+            const positionBuffer = gl.createBuffer();
+            gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer);
+            // A single large triangle that covers the screen (more efficient than a quad)
+            const positions = [-1, -1, -1, 3, 3, -1];
+            gl.bufferData(
+                gl.ARRAY_BUFFER,
+                new Float32Array(positions),
+                gl.STATIC_DRAW,
+            );
+
+            function render(time) {
+                time *= 0.001; // Convert to seconds
+
+                gl.useProgram(program);
+
+                gl.enableVertexAttribArray(positionAttributeLocation);
+                gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer);
+                gl.vertexAttribPointer(
+                    positionAttributeLocation,
+                    2,
+                    gl.FLOAT,
+                    false,
+                    0,
+                    0,
+                );
+
+                gl.uniform2f(
+                    resolutionUniformLocation,
+                    canvas.width,
+                    canvas.height,
+                );
+                gl.uniform1f(timeUniformLocation, time);
+
+                gl.drawArrays(gl.TRIANGLES, 0, 3);
+
+                requestAnimationFrame(render);
+            }
+
+            requestAnimationFrame(render);
+        </script>
+    </body>
+</html>

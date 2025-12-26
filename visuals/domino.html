@@ -1,0 +1,371 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Falling Dominos</title>
+    <style>
+        body, html {
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            height: 100%;
+            background-color: #000;
+            overflow: hidden;
+        }
+        canvas {
+            display: block;
+            width: 100vw;
+            height: 100vh;
+        }
+    </style>
+</head>
+<body>
+    <canvas id="glcanvas"></canvas>
+
+    <script id="vertex-shader" type="x-shader/x-vertex">
+        attribute vec2 a_position;
+        void main() {
+            gl_Position = vec4(a_position, 0.0, 1.0);
+        }
+    </script>
+
+    <script id="fragment-shader" type="x-shader/x-fragment">
+        #ifdef GL_ES
+        precision highp float;
+        #endif
+
+        uniform vec2 u_resolution;
+        uniform float u_time;
+
+        #define PI 3.14159265359
+
+        mat2 rot(float a) {
+            float c = cos(a), s = sin(a);
+            return mat2(c, -s, s, c);
+        }
+
+        float hash(float n) {
+            return fract(sin(n) * 43758.5453);
+        }
+
+        float hash2(vec2 p) {
+            return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453);
+        }
+
+        float noise(vec2 p) {
+            vec2 i = floor(p);
+            vec2 f = fract(p);
+            f = f * f * (3.0 - 2.0 * f);
+            float a = hash2(i);
+            float b = hash2(i + vec2(1.0, 0.0));
+            float c = hash2(i + vec2(0.0, 1.0));
+            float d = hash2(i + vec2(1.0, 1.0));
+            return mix(mix(a, b, f.x), mix(c, d, f.x), f.y);
+        }
+
+        float sdRoundBox(vec2 p, vec2 b, float r) {
+            vec2 q = abs(p) - b + r;
+            return min(max(q.x, q.y), 0.0) + length(max(q, 0.0)) - r;
+        }
+
+        float dominoDot(vec2 p, vec2 center, float radius) {
+            return smoothstep(radius + 0.015, radius - 0.015, length(p - center));
+        }
+
+        float dominoDots(vec2 p, float num, float dotSize) {
+            float dots = 0.0;
+            float spacing = 0.08;
+
+            if (num >= 1.0) dots += dominoDot(p, vec2(0.0, 0.0), dotSize);
+            if (num >= 2.0) {
+                dots += dominoDot(p, vec2(-spacing, spacing), dotSize);
+                dots += dominoDot(p, vec2(spacing, -spacing), dotSize);
+            }
+            if (num >= 3.0) {
+                dots += dominoDot(p, vec2(-spacing, -spacing), dotSize);
+                dots += dominoDot(p, vec2(spacing, spacing), dotSize);
+            }
+            if (num >= 4.0) {
+                dots += dominoDot(p, vec2(-spacing, 0.0), dotSize);
+                dots += dominoDot(p, vec2(spacing, 0.0), dotSize);
+            }
+
+            return clamp(dots, 0.0, 1.0);
+        }
+
+        float speedLines(vec2 uv, float angle, float density) {
+            float a = atan(uv.y, uv.x) - angle;
+            float lines = pow(abs(sin(a * density)), 15.0);
+            return lines;
+        }
+
+        vec3 drawDomino(vec2 uv, vec2 pos, float fallAngle, float idx, float scale, vec3 col) {
+            vec2 p = uv - pos;
+
+            // Giant domino dimensions
+            vec2 size = vec2(0.15, 0.6) * scale;
+            float cornerRadius = 0.03 * scale;
+
+            // Pivot from bottom center
+            vec2 pivot = vec2(0.0, -size.y);
+            p -= pivot;
+            p = rot(fallAngle) * p;
+            p += pivot;
+
+            float d = sdRoundBox(p, size, cornerRadius);
+
+            // Deep shadow for dramatic effect
+            vec2 shadowOffset = vec2(0.08, -0.05) * scale * (1.0 - fallAngle / (PI * 0.5));
+            vec2 shadowP = p + shadowOffset;
+            float shadow = sdRoundBox(shadowP, size * 1.02, cornerRadius);
+            col = mix(col, vec3(0.0), smoothstep(0.03 * scale, -0.02 * scale, shadow) * 0.5);
+
+            // Secondary shadow for depth
+            vec2 shadow2Offset = vec2(0.15, -0.1) * scale * (1.0 - fallAngle / (PI * 0.5));
+            vec2 shadow2P = p + shadow2Offset;
+            float shadow2 = sdRoundBox(shadow2P, size * 1.02, cornerRadius);
+            col = mix(col, vec3(0.0), smoothstep(0.05 * scale, 0.0, shadow2) * 0.2);
+
+            // Domino body - ivory white
+            vec3 dominoColor = vec3(0.97, 0.95, 0.90);
+
+            // Add subtle gradient for 3D feel
+            float gradient = smoothstep(-size.y, size.y, p.y) * 0.1;
+            dominoColor -= gradient;
+
+            col = mix(col, dominoColor, smoothstep(0.01 * scale, -0.01 * scale, d));
+
+            // Thick comic outline
+            float outlineWidth = 0.025 * scale;
+            col = mix(col, vec3(0.0), smoothstep(outlineWidth + 0.01 * scale, outlineWidth - 0.01 * scale, abs(d)) * step(d, outlineWidth));
+
+            // Inner edge highlight
+            float innerEdge = smoothstep(-0.01 * scale, -0.03 * scale, d);
+            col = mix(col, vec3(1.0), innerEdge * 0.3 * step(d, 0.0));
+
+            // Divider line
+            float dividerY = 0.0;
+            float divider = smoothstep(0.012 * scale, 0.004 * scale, abs(p.y - dividerY)) * step(abs(p.x), size.x - 0.02 * scale);
+            col = mix(col, vec3(0.0), divider * step(d, 0.0));
+
+            // Dots on domino
+            if (d < 0.0) {
+                float topNum = mod(idx * 3.7, 6.0) + 1.0;
+                float botNum = mod(idx * 5.3, 6.0) + 1.0;
+
+                vec2 topP = (p - vec2(0.0, size.y * 0.5)) / scale;
+                vec2 botP = (p - vec2(0.0, -size.y * 0.5)) / scale;
+
+                float dots = dominoDots(topP * 1.8, topNum, 0.045);
+                dots += dominoDots(botP * 1.8, botNum, 0.045);
+
+                col = mix(col, vec3(0.02), dots);
+            }
+
+            return col;
+        }
+
+        void main() {
+            vec2 uv = (gl_FragCoord.xy - 0.5 * u_resolution.xy) / u_resolution.y;
+
+            // Shift camera down to be at ground level looking up
+            uv.y += 0.35;
+
+            // Comic paper background with warm tone
+            vec3 col = vec3(0.96, 0.94, 0.88);
+
+            // Paper texture
+            float paper = noise(gl_FragCoord.xy * 0.3) * 0.04;
+            col -= paper;
+
+            // Dramatic radial speed lines from impact point
+            float time = u_time;
+            float cycleTime = 6.0;
+            float t = mod(time, cycleTime);
+
+            // Speed lines emanating from where dominos fall
+            float fallWave = t * 0.8 - 1.5;
+            vec2 impactCenter = vec2(fallWave * 0.5, -0.1);
+            float impactDist = length(uv - impactCenter);
+
+            float radialLines = speedLines(uv - impactCenter, 0.0, 80.0);
+            float lineFade = smoothstep(1.5, 0.1, impactDist) * smoothstep(0.0, 0.3, impactDist);
+            col -= radialLines * lineFade * 0.15;
+
+            // Ground line
+            float groundY = -0.35;
+            float ground = smoothstep(0.01, -0.01, uv.y - groundY);
+            col = mix(col, vec3(0.92, 0.90, 0.85), ground * 0.5);
+
+            // Ground line accent
+            float groundLine = smoothstep(0.008, 0.0, abs(uv.y - groundY));
+            col = mix(col, vec3(0.0), groundLine * 0.6);
+
+            // Draw giant dominos - only a few, very large
+            for (float i = -2.0; i <= 3.0; i += 1.0) {
+                float idx = i + 10.0;
+
+                // Spacing between dominos
+                float spacing = 0.45;
+                float xPos = i * spacing;
+
+                // Perspective scale - dominos further away are smaller
+                float depth = 1.0 - i * 0.08;
+                float scale = depth;
+
+                // Position at ground level
+                vec2 pos = vec2(xPos, groundY + 0.6 * scale);
+
+                // Wave trigger timing
+                float triggerTime = (i + 2.0) * 0.7;
+
+                // Fall animation with dramatic easing
+                float fallProgress = clamp((t - triggerTime) * 1.5, 0.0, 1.0);
+
+                // Cubic ease out with bounce
+                float ease = 1.0 - pow(1.0 - fallProgress, 3.0);
+
+                // Add impact bounce
+                float bounce = sin(fallProgress * PI * 3.0) * exp(-fallProgress * 4.0) * 0.15;
+
+                float fallAngle = (ease + bounce) * PI * 0.42;
+
+                col = drawDomino(uv, pos, fallAngle, idx, scale, col);
+            }
+
+            // Impact dust/debris particles
+            for (float i = 0.0; i < 15.0; i++) {
+                float particleTime = mod(t + hash(i) * 2.0, cycleTime);
+                float triggerT = floor((i + 3.0) / 5.0) * 0.7;
+                float particleProgress = (particleTime - triggerT) * 2.0;
+
+                if (particleProgress > 0.0 && particleProgress < 1.5) {
+                    float px = (floor((i + 3.0) / 5.0) - 2.0) * 0.45 + (hash(i * 7.0) - 0.5) * 0.3;
+                    float py = groundY + particleProgress * (0.3 + hash(i * 13.0) * 0.2) - particleProgress * particleProgress * 0.5;
+
+                    float particleSize = 0.008 * (1.0 - particleProgress / 1.5);
+                    float particle = smoothstep(particleSize, 0.0, length(uv - vec2(px, py)));
+                    col = mix(col, vec3(0.3), particle * 0.5);
+                }
+            }
+
+            // Motion blur lines behind falling dominos
+            for (float i = -2.0; i <= 3.0; i += 1.0) {
+                float triggerTime = (i + 2.0) * 0.7;
+                float fallProgress = clamp((t - triggerTime) * 1.5, 0.0, 1.0);
+
+                if (fallProgress > 0.1 && fallProgress < 0.8) {
+                    float xPos = i * 0.45;
+                    float motionIntensity = sin(fallProgress * PI) * 0.3;
+
+                    for (float j = 0.0; j < 5.0; j++) {
+                        float lineX = xPos + 0.1 + j * 0.03;
+                        float lineY = groundY + 0.3 + j * 0.08;
+                        float lineLen = 0.15 - j * 0.02;
+
+                        float line = smoothstep(0.004, 0.0, abs(uv.x - lineX));
+                        line *= smoothstep(lineY - lineLen, lineY, uv.y);
+                        line *= smoothstep(lineY + 0.02, lineY, uv.y);
+
+                        col = mix(col, vec3(0.0), line * motionIntensity * (1.0 - j / 5.0));
+                    }
+                }
+            }
+
+            // Dramatic vignette
+            float vignette = 1.0 - length(uv * vec2(0.7, 0.9)) * 0.6;
+            vignette = smoothstep(0.0, 0.7, vignette);
+            col *= 0.75 + vignette * 0.25;
+
+            // Top darkening for drama
+            float topDark = smoothstep(0.3, 0.6, uv.y);
+            col *= 1.0 - topDark * 0.15;
+
+            // Film grain
+            float grain = hash2(gl_FragCoord.xy + fract(time) * 1000.0) * 0.05 - 0.025;
+            col += grain;
+
+            // Warm vintage tint
+            col.r *= 1.03;
+            col.b *= 0.97;
+
+            gl_FragColor = vec4(col, 1.0);
+        }
+    </script>
+
+    <script>
+        const canvas = document.getElementById("glcanvas");
+        const gl = canvas.getContext("webgl");
+
+        if (!gl) {
+            alert("WebGL not supported, but it is required for this effect.");
+        }
+
+        function resize() {
+            canvas.width = window.innerWidth * window.devicePixelRatio;
+            canvas.height = window.innerHeight * window.devicePixelRatio;
+            gl.viewport(0, 0, canvas.width, canvas.height);
+        }
+        window.addEventListener("resize", resize);
+        resize();
+
+        function createShader(gl, type, source) {
+            const shader = gl.createShader(type);
+            gl.shaderSource(shader, source);
+            gl.compileShader(shader);
+            if (!gl.getShaderParameter(shader, gl.COMPILE_STATUS)) {
+                console.error(gl.getShaderInfoLog(shader));
+                gl.deleteShader(shader);
+                return null;
+            }
+            return shader;
+        }
+
+        function createProgram(gl, vertexSource, fragmentSource) {
+            const vertexShader = createShader(gl, gl.VERTEX_SHADER, vertexSource);
+            const fragmentShader = createShader(gl, gl.FRAGMENT_SHADER, fragmentSource);
+            const program = gl.createProgram();
+            gl.attachShader(program, vertexShader);
+            gl.attachShader(program, fragmentShader);
+            gl.linkProgram(program);
+            if (!gl.getProgramParameter(program, gl.LINK_STATUS)) {
+                console.error(gl.getProgramInfoLog(program));
+                return null;
+            }
+            return program;
+        }
+
+        const vsSource = document.getElementById("vertex-shader").text;
+        const fsSource = document.getElementById("fragment-shader").text;
+        const program = createProgram(gl, vsSource, fsSource);
+
+        const positionAttributeLocation = gl.getAttribLocation(program, "a_position");
+        const resolutionUniformLocation = gl.getUniformLocation(program, "u_resolution");
+        const timeUniformLocation = gl.getUniformLocation(program, "u_time");
+
+        const positionBuffer = gl.createBuffer();
+        gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer);
+        const positions = [
+            -1, -1,
+            -1, 3,
+            3, -1,
+        ];
+        gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(positions), gl.STATIC_DRAW);
+
+        function render(time) {
+            time *= 0.001;
+            gl.useProgram(program);
+            gl.enableVertexAttribArray(positionAttributeLocation);
+            gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer);
+            gl.vertexAttribPointer(positionAttributeLocation, 2, gl.FLOAT, false, 0, 0);
+            gl.uniform2f(resolutionUniformLocation, canvas.width, canvas.height);
+            gl.uniform1f(timeUniformLocation, time);
+            gl.drawArrays(gl.TRIANGLES, 0, 3);
+            requestAnimationFrame(render);
+        }
+
+        requestAnimationFrame(render);
+    </script>
+</body>
+</html>

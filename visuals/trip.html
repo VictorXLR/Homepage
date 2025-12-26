@@ -1,0 +1,473 @@
+<!doctype html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>Trip</title>
+        <style>
+            body {
+                margin: 0;
+                padding: 0;
+                overflow: hidden;
+                background: #000;
+            }
+            
+            #canvas-container {
+                position: fixed;
+                top: 0;
+                left: 0;
+                width: 100%;
+                height: 100%;
+                z-index: 1;
+            }
+            
+            canvas {
+                display: block;
+                width: 100%;
+                height: 100%;
+            }
+        </style>
+    </head>
+    <body>
+        <div id="canvas-container">
+            <canvas id="glCanvas"></canvas>
+        </div>
+
+        <script>
+            // Abstract Glassy Field by Shane
+            const vertexShaderSource = `
+                attribute vec2 a_position;
+                varying vec2 vUv;
+                void main() {
+                    vUv = a_position * 0.5 + 0.5;
+                    gl_Position = vec4(a_position, 0.0, 1.0);
+                }
+            `;
+
+            const fragmentShaderSource = `
+                /*
+                    Abstract Glassy Field
+                    ---------------------
+                    By Shane - Adapted for WebGL 1.0
+                */
+                precision highp float;
+                varying vec2 vUv;
+                uniform float iTime;
+                uniform vec2 iResolution;
+                uniform sampler2D iChannel0;
+                uniform sampler2D iChannel1;
+
+                #define FAR 50.0
+                #define TAU 6.2831853
+
+                float accum;
+
+                // 2x2 matrix rotation
+                mat2 rot2(float a) {
+                    vec2 v = sin(vec2(1.570796, 0.0) - a);
+                    return mat2(v, -v.y, v.x);
+                }
+
+                // Tri-Planar blending function
+                vec3 tpl(sampler2D t, in vec3 p, in vec3 n) {
+                    n = max(abs(n) - 0.2, 0.001);
+                    n /= dot(n, vec3(1));
+                    vec3 tx = texture2D(t, p.zy).xyz;
+                    vec3 ty = texture2D(t, p.xz).xyz;
+                    vec3 tz = texture2D(t, p.xy).xyz;
+                    return (tx*tx*n.x + ty*ty*n.y + tz*tz*n.z);
+                }
+
+                // Camera path
+                vec3 camPath(float t) {
+                    float a = sin(t * 0.11);
+                    float b = cos(t * 0.14);
+                    return vec3(a*4.0 - b*1.5, b*1.7 + a*1.5, t);
+                }
+
+                // Distance field - with TAU fix for long-running artifact prevention
+                float map(vec3 p) {
+                    p.xy -= camPath(p.z).xy;
+                    p = cos(mod(p*0.315*1.25 + sin(mod(p.zxy*0.875*1.25, TAU)), TAU));
+                    float n = length(p);
+                    return (n - 1.025) * 1.33;
+                }
+
+                // Ambient occlusion
+                float cao(in vec3 p, in vec3 n) {
+                    float sca = 1.0, occ = 0.0;
+                    for(float i = 0.0; i < 5.0; i++) {
+                        float hr = 0.01 + i * 0.35 / 4.0;
+                        float dd = map(n * hr + p);
+                        occ += (hr - dd) * sca;
+                        sca *= 0.7;
+                    }
+                    return clamp(1.0 - occ, 0.0, 1.0);
+                }
+
+                // Normal calculation
+                vec3 nr(vec3 p) {
+                    const vec2 e = vec2(0.002, 0.0);
+                    return normalize(vec3(
+                        map(p + e.xyy) - map(p - e.xyy),
+                        map(p + e.yxy) - map(p - e.yxy),
+                        map(p + e.yyx) - map(p - e.yyx)
+                    ));
+                }
+
+                // Raymarcher
+                float trace(in vec3 ro, in vec3 rd) {
+                    accum = 0.0;
+                    float t = 0.0, h;
+                    for(int i = 0; i < 128; i++) {
+                        h = map(ro + rd * t);
+                        if(abs(h) < 0.001 * (t * 0.25 + 1.0) || t > FAR) break;
+                        t += h;
+                        if(abs(h) < 0.35) accum += (0.35 - abs(h)) / 24.0;
+                    }
+                    return min(t, FAR);
+                }
+
+                // Shadows
+                float sha(in vec3 ro, in vec3 rd, in float start, in float end, in float k) {
+                    float shade = 1.0;
+                    float dist = start;
+                    for(int i = 0; i < 24; i++) {
+                        float h = map(ro + rd * dist);
+                        shade = min(shade, smoothstep(0.0, 1.0, k * h / dist));
+                        dist += clamp(h, 0.01, 0.2);
+                        if(abs(h) < 0.001 || dist > end) break;
+                    }
+                    return min(max(shade, 0.0) + 0.4, 1.0);
+                }
+
+                // Texture bump mapping
+                vec3 db(sampler2D tx, in vec3 p, in vec3 n, float bf) {
+                    const vec2 e = vec2(0.001, 0.0);
+                    vec3 m0 = tpl(tx, p - e.xyy, n);
+                    vec3 m1 = tpl(tx, p - e.yxy, n);
+                    vec3 m2 = tpl(tx, p - e.yyx, n);
+                    vec3 g = vec3(
+                        dot(m0, vec3(0.299, 0.587, 0.114)),
+                        dot(m1, vec3(0.299, 0.587, 0.114)),
+                        dot(m2, vec3(0.299, 0.587, 0.114))
+                    );
+                    g = (g - dot(tpl(tx, p, n), vec3(0.299, 0.587, 0.114))) / e.x;
+                    g -= n * dot(n, g);
+                    return normalize(n + g * bf);
+                }
+
+                // 3D noise
+                float n3D(vec3 p) {
+                    const vec3 s = vec3(7.0, 157.0, 113.0);
+                    vec3 ip = floor(p);
+                    p -= ip;
+                    vec4 h = vec4(0.0, s.yz, s.y + s.z) + dot(ip, s);
+                    p = p * p * (3.0 - 2.0 * p);
+                    h = mix(fract(sin(mod(h, 6.231589)) * 43758.5453),
+                            fract(sin(mod(h + s.x, 6.231589)) * 43758.5453), p.x);
+                    h.xy = mix(h.xz, h.yw, p.y);
+                    return mix(h.x, h.y, p.z);
+                }
+
+                // Environment mapping
+                vec3 envMap(vec3 rd, vec3 n) {
+                    vec3 col = tpl(iChannel1, rd * 4.0, n);
+                    return smoothstep(0.0, 1.0, col);
+                }
+
+                void main() {
+                    vec2 fragCoord = vUv * iResolution.xy;
+                    vec2 u = (fragCoord - iResolution.xy * 0.5) / iResolution.y;
+
+                    // Camera Setup
+                    float speed = 4.0;
+                    vec3 o = camPath(iTime * speed);
+                    vec3 lk = camPath(iTime * speed + 0.25);
+                    vec3 l = camPath(iTime * speed + 2.0) + vec3(0.0, 1.0, 0.0);
+
+                    // Ray direction with lens distortion
+                    float FOV = 3.14159 / 2.0;
+                    vec3 fwd = normalize(lk - o);
+                    vec3 rgt = normalize(vec3(fwd.z, 0.0, -fwd.x));
+                    vec3 up = cross(fwd, rgt);
+                    vec3 r = fwd + FOV * (u.x * rgt + u.y * up);
+                    r = normalize(vec3(r.xy, r.z - length(r.xy) * 0.125));
+
+                    // Raymarch
+                    float t = trace(o, r);
+
+                    vec3 col = vec3(0.0);
+
+                    if(t < FAR) {
+                        vec3 p = o + r * t;
+                        vec3 n = nr(p);
+                        vec3 svn = n;
+
+                        // Texture bump
+                        float sz = 1.0 / 3.0;
+                        n = db(iChannel0, p * sz, n, 0.1 / (1.0 + t * 0.25 / FAR));
+
+                        l -= p;
+                        float d = max(length(l), 0.001);
+                        l /= d;
+
+                        float at = 1.0 / (1.0 + d * 0.05 + d * d * 0.0125);
+                        float ao = cao(p, n);
+                        float sh = sha(p, l, 0.04, d, 16.0);
+                        float di = max(dot(l, n), 0.0);
+                        float sp = pow(max(dot(reflect(r, n), l), 0.0), 64.0);
+                        float fr = clamp(1.0 + dot(r, n), 0.0, 1.0);
+
+                        vec3 tx = vec3(0.05);
+                        col = tx * (di * 0.1 + ao * 0.25) + vec3(0.5, 0.7, 1.0) * sp * 2.0 + vec3(1.0, 0.7, 0.4) * pow(fr, 8.0) * 0.25;
+
+                        // Reflection and refraction
+                        vec3 mixN = svn * 0.5 + n * 0.5;
+                        vec3 refl = envMap(normalize(reflect(r, mixN)), mixN);
+                        vec3 refr = envMap(normalize(refract(r, mixN, 1.0 / 1.35)), mixN);
+                        vec3 refCol = mix(refr, refl, pow(fr, 5.0));
+                        col += refCol * ((di * di * 0.25 + 0.75) + ao * 0.25) * 1.5;
+
+                        // Color variation based on diffuse
+                        col = mix(col.xzy, col, di * 0.85 + 0.15);
+
+                        // Glow
+                        vec3 accCol = vec3(1.0, 0.3, 0.1) * accum;
+                        vec3 gc = pow(min(vec3(1.5, 1.0, 1.0) * accum, 1.0), vec3(1.0, 2.5, 12.0)) * 0.5 + accCol * 0.5;
+                        col += col * gc * 12.0;
+
+                        // Purple electric charge
+                        float hi = abs(mod(t / 1.0 + iTime / 3.0, 8.0) - 4.0) * 2.0;
+                        vec3 cCol = vec3(0.01, 0.05, 1.0) * col / (0.001 + hi * hi * 0.2);
+                        col += mix(cCol.yxz, cCol, n3D(p * 3.0));
+
+                        // Apply shading
+                        col *= ao * sh * at;
+                    }
+
+                    // Fog
+                    vec3 fog = vec3(0.125, 0.04, 0.05) * (r.y * 0.5 + 0.5);
+                    col = mix(col, fog, smoothstep(0.0, 0.95, t / FAR));
+
+                    // Vignette
+                    vec2 uv = fragCoord / iResolution.xy;
+                    col = mix(vec3(0.0), col, pow(16.0 * uv.x * uv.y * (1.0 - uv.x) * (1.0 - uv.y), 0.125) * 0.5 + 0.5);
+
+                    // Gamma correction
+                    gl_FragColor = vec4(sqrt(clamp(col, 0.0, 1.0)), 1.0);
+                }
+            `;
+
+            // WebGL setup
+            const canvas = document.getElementById('glCanvas');
+            const gl = canvas.getContext('webgl') || canvas.getContext('experimental-webgl');
+
+            if (!gl) {
+                console.error('WebGL not supported');
+                document.body.innerHTML = '<div style="color: white; text-align: center; padding: 50px;">WebGL not supported</div>';
+            }
+
+            function createShader(gl, type, source) {
+                const shader = gl.createShader(type);
+                gl.shaderSource(shader, source);
+                gl.compileShader(shader);
+                
+                if (!gl.getShaderParameter(shader, gl.COMPILE_STATUS)) {
+                    console.error('Shader compilation error:', gl.getShaderInfoLog(shader));
+                    gl.deleteShader(shader);
+                    return null;
+                }
+                
+                return shader;
+            }
+
+            function createProgram(gl, vertexShader, fragmentShader) {
+                const program = gl.createProgram();
+                gl.attachShader(program, vertexShader);
+                gl.attachShader(program, fragmentShader);
+                gl.linkProgram(program);
+                
+                if (!gl.getProgramParameter(program, gl.LINK_STATUS)) {
+                    console.error('Program linking error:', gl.getProgramInfoLog(program));
+                    gl.deleteProgram(program);
+                    return null;
+                }
+                
+                return program;
+            }
+
+            // Create shaders and program
+            const vertexShader = createShader(gl, gl.VERTEX_SHADER, vertexShaderSource);
+            const fragmentShader = createShader(gl, gl.FRAGMENT_SHADER, fragmentShaderSource);
+            const program = createProgram(gl, vertexShader, fragmentShader);
+
+            // Set up geometry
+            const positions = new Float32Array([
+                -1, -1,
+                 1, -1,
+                -1,  1,
+                 1,  1,
+            ]);
+
+            const positionBuffer = gl.createBuffer();
+            gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer);
+            gl.bufferData(gl.ARRAY_BUFFER, positions, gl.STATIC_DRAW);
+
+            // Get attribute and uniform locations
+            const positionAttributeLocation = gl.getAttribLocation(program, 'a_position');
+            const timeUniformLocation = gl.getUniformLocation(program, 'iTime');
+            const resolutionUniformLocation = gl.getUniformLocation(program, 'iResolution');
+
+            // Procedural Texture Generation
+            function createProceduralTexture(type) {
+                const size = 512;
+                const canvas = document.createElement('canvas');
+                canvas.width = size;
+                canvas.height = size;
+                const ctx = canvas.getContext('2d');
+                
+                // Helper for seamless wrapping
+                function drawWrapped(x, y, r, drawFn) {
+                    const offsets = [
+                        [0, 0], [size, 0], [-size, 0], 
+                        [0, size], [0, -size],
+                        [size, size], [-size, -size], 
+                        [size, -size], [-size, size]
+                    ];
+                    
+                    offsets.forEach(([ox, oy]) => {
+                        if (x + ox + r > 0 && x + ox - r < size && 
+                            y + oy + r > 0 && y + oy - r < size) {
+                            ctx.save();
+                            ctx.translate(x + ox, y + oy);
+                            drawFn();
+                            ctx.restore();
+                        }
+                    });
+                }
+
+                if (type === 'pebbles') {
+                    // Heightmap for bump mapping (black to white)
+                    ctx.fillStyle = '#000';
+                    ctx.fillRect(0, 0, size, size);
+                    
+                    for (let i = 0; i < 400; i++) {
+                        const x = Math.random() * size;
+                        const y = Math.random() * size;
+                        const r = Math.random() * 30 + 10;
+                        
+                        drawWrapped(x, y, r, () => {
+                            const g = ctx.createRadialGradient(0, 0, 0, 0, 0, r);
+                            g.addColorStop(0, '#fff');
+                            g.addColorStop(1, 'rgba(0,0,0,0)');
+                            ctx.fillStyle = g;
+                            ctx.beginPath();
+                            ctx.arc(0, 0, r, 0, Math.PI * 2);
+                            ctx.fill();
+                        });
+                    }
+                } else if (type === 'organic') {
+                    // Colorful environment map
+                    ctx.fillStyle = '#102'; // Deep purple/blue bg
+                    ctx.fillRect(0, 0, size, size);
+                    
+                    for (let i = 0; i < 150; i++) {
+                        const x = Math.random() * size;
+                        const y = Math.random() * size;
+                        const r = Math.random() * 100 + 40;
+                        const hue = Math.random() * 360;
+                        
+                        drawWrapped(x, y, r, () => {
+                            const g = ctx.createRadialGradient(0, 0, 0, 0, 0, r);
+                            g.addColorStop(0, `hsla(${hue}, 80%, 60%, 1)`);
+                            g.addColorStop(0.5, `hsla(${hue}, 80%, 60%, 0.5)`);
+                            g.addColorStop(1, `hsla(${hue}, 80%, 60%, 0)`);
+                            ctx.fillStyle = g;
+                            ctx.beginPath();
+                            ctx.arc(0, 0, r, 0, Math.PI * 2);
+                            ctx.fill();
+                        });
+                    }
+                }
+                
+                return canvas;
+            }
+
+            // Create and upload texture from canvas
+            function initTextureFromCanvas(canvas, textureUnit) {
+                const texture = gl.createTexture();
+                gl.activeTexture(gl.TEXTURE0 + textureUnit);
+                gl.bindTexture(gl.TEXTURE_2D, texture);
+                
+                // Flip Y for WebGL convention
+                gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, true);
+                
+                gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, canvas);
+                gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR_MIPMAP_LINEAR);
+                gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR);
+                gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.REPEAT);
+                gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.REPEAT);
+                gl.generateMipmap(gl.TEXTURE_2D);
+                
+                return texture;
+            }
+
+            // Generate and initialize textures
+            // Texture 0: Pebbles (Bump map)
+            const canvasPebbles = createProceduralTexture('pebbles');
+            const noiseTexture0 = initTextureFromCanvas(canvasPebbles, 0);
+
+            // Texture 1: Organic (Environment map)
+            const canvasOrganic = createProceduralTexture('organic');
+            const noiseTexture1 = initTextureFromCanvas(canvasOrganic, 1);
+
+            // Resize canvas
+            function resizeCanvas() {
+                canvas.width = window.innerWidth;
+                canvas.height = window.innerHeight;
+                gl.viewport(0, 0, canvas.width, canvas.height);
+            }
+
+            window.addEventListener('resize', resizeCanvas);
+            resizeCanvas();
+
+            // Animation loop
+            let startTime = Date.now();
+            
+            function render() {
+                const currentTime = (Date.now() - startTime) / 1000;
+                
+                gl.clearColor(0, 0, 0, 1);
+                gl.clear(gl.COLOR_BUFFER_BIT);
+                
+                gl.useProgram(program);
+                
+                // Set uniforms
+                gl.uniform1f(timeUniformLocation, currentTime);
+                gl.uniform2f(resolutionUniformLocation, canvas.width, canvas.height);
+                
+                // Set up position attribute
+                gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer);
+                gl.enableVertexAttribArray(positionAttributeLocation);
+                gl.vertexAttribPointer(positionAttributeLocation, 2, gl.FLOAT, false, 0, 0);
+                
+                // Bind textures
+                gl.activeTexture(gl.TEXTURE0);
+                gl.bindTexture(gl.TEXTURE_2D, noiseTexture0);
+                gl.uniform1i(gl.getUniformLocation(program, 'iChannel0'), 0);
+                
+                gl.activeTexture(gl.TEXTURE1);
+                gl.bindTexture(gl.TEXTURE_2D, noiseTexture1);
+                gl.uniform1i(gl.getUniformLocation(program, 'iChannel1'), 1);
+                
+                // Draw
+                gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
+                
+                requestAnimationFrame(render);
+            }
+
+            render();
+        </script>
+    </body>
+</html>
