@@ -1,0 +1,182 @@
+<!doctype html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>Trace</title>
+        <style>
+            body,
+            html {
+                margin: 0;
+                padding: 0;
+                width: 100%;
+                height: 100%;
+                background-color: #000;
+                overflow: hidden;
+            }
+            canvas {
+                display: block;
+                width: 100vw;
+                height: 100vh;
+            }
+        </style>
+    </head>
+    <body>
+        <canvas id="glcanvas"></canvas>
+
+        <script id="vertex-shader" type="x-shader/x-vertex">
+            attribute vec2 a_position;
+            void main() {
+                gl_Position = vec4(a_position, 0.0, 1.0);
+            }
+        </script>
+
+        <script id="fragment-shader" type="x-shader/x-fragment">
+            #ifdef GL_ES
+            precision mediump float;
+            #endif
+
+            uniform float time;
+            uniform vec2 resolution;
+
+            vec3 digitalRainbow(float value) {
+                float r = clamp(sin(value + 0.0) * 0.5 + 0.5, 0.0, 1.0);
+                float g = clamp(sin(value + 2.0944) * 0.5 + 0.5, 0.0, 1.0);
+                float b = clamp(sin(value + 4.18879) * 0.5 + 0.5, 0.0, 1.0);
+                return vec3(r, g, b);
+            }
+
+            void main() {
+                vec2 uv = gl_FragCoord.xy / resolution.xy;
+
+                float randomFactor = fract(sin(dot(uv, vec2(5555555.9898, 9.233))) * 33758.5453);
+
+                float scale = 9.0;
+                float angle = sin(uv.x * scale) + cos(uv.y * scale) + time;
+                vec2 flowDir = vec2(cos(angle), sin(angle));
+
+                vec2 newUV = uv + flowDir * randomFactor * 0.05;
+
+                vec2 scaledUV = newUV * 20.0;
+                float pixelValue = 1.0 - step(0.5, mod(scaledUV.x + scaledUV.y, 2.0));
+
+                vec3 backgroundColor = vec3(0.0);
+
+                vec3 rainbowColor = digitalRainbow(mod(time + scaledUV.x + scaledUV.y, 6.2831));
+
+                vec3 finalColor = mix(backgroundColor, rainbowColor, pixelValue);
+
+                gl_FragColor = vec4(finalColor, 1.0);
+            }
+        </script>
+
+        <script>
+            const canvas = document.getElementById("glcanvas");
+            const gl = canvas.getContext("webgl");
+
+            if (!gl) {
+                alert(
+                    "WebGL not supported, but it is required for this effect.",
+                );
+            }
+
+            function resize() {
+                canvas.width = window.innerWidth;
+                canvas.height = window.innerHeight;
+                gl.viewport(0, 0, canvas.width, canvas.height);
+            }
+            window.addEventListener("resize", resize);
+            resize();
+
+            function createShader(gl, type, source) {
+                const shader = gl.createShader(type);
+                gl.shaderSource(shader, source);
+                gl.compileShader(shader);
+                if (!gl.getShaderParameter(shader, gl.COMPILE_STATUS)) {
+                    console.error(gl.getShaderInfoLog(shader));
+                    gl.deleteShader(shader);
+                    return null;
+                }
+                return shader;
+            }
+
+            function createProgram(gl, vertexSource, fragmentSource) {
+                const vertexShader = createShader(
+                    gl,
+                    gl.VERTEX_SHADER,
+                    vertexSource,
+                );
+                const fragmentShader = createShader(
+                    gl,
+                    gl.FRAGMENT_SHADER,
+                    fragmentSource,
+                );
+                const program = gl.createProgram();
+                gl.attachShader(program, vertexShader);
+                gl.attachShader(program, fragmentShader);
+                gl.linkProgram(program);
+                if (!gl.getProgramParameter(program, gl.LINK_STATUS)) {
+                    console.error(gl.getProgramInfoLog(program));
+                    return null;
+                }
+                return program;
+            }
+
+            const vsSource = document.getElementById("vertex-shader").text;
+            const fsSource = document.getElementById("fragment-shader").text;
+            const program = createProgram(gl, vsSource, fsSource);
+
+            const positionAttributeLocation = gl.getAttribLocation(
+                program,
+                "a_position",
+            );
+            const resolutionUniformLocation = gl.getUniformLocation(
+                program,
+                "resolution",
+            );
+            const timeUniformLocation = gl.getUniformLocation(
+                program,
+                "time",
+            );
+
+            const positionBuffer = gl.createBuffer();
+            gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer);
+            const positions = [-1, -1, -1, 3, 3, -1];
+            gl.bufferData(
+                gl.ARRAY_BUFFER,
+                new Float32Array(positions),
+                gl.STATIC_DRAW,
+            );
+
+            function render(time) {
+                time *= 0.001;
+
+                gl.useProgram(program);
+
+                gl.enableVertexAttribArray(positionAttributeLocation);
+                gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer);
+                gl.vertexAttribPointer(
+                    positionAttributeLocation,
+                    2,
+                    gl.FLOAT,
+                    false,
+                    0,
+                    0,
+                );
+
+                gl.uniform2f(
+                    resolutionUniformLocation,
+                    canvas.width,
+                    canvas.height,
+                );
+                gl.uniform1f(timeUniformLocation, time);
+
+                gl.drawArrays(gl.TRIANGLES, 0, 3);
+
+                requestAnimationFrame(render);
+            }
+
+            requestAnimationFrame(render);
+        </script>
+    </body>
+</html>
