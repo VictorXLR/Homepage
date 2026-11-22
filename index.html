@@ -77,6 +77,10 @@
                         ><span class="nav-text-mobile">@</span></a
                     >
                 </div>
+                <div class="color-picker-widget">
+                    <label for="bg-color" class="color-label">BG</label>
+                    <input type="color" id="bg-color" value="#ff00ff" />
+                </div>
             </nav>
 
             <header class="hero">
@@ -303,6 +307,7 @@
         <script id="fragmentShader" type="x-shader/x-fragment">
             uniform float time;
             uniform vec2 resolution;
+            uniform vec3 bgColor;
             varying vec2 vUv;
 
             float random(vec2 st) {
@@ -317,8 +322,8 @@
                 float stripes = sin(st.x * 20.0 + st.y * 10.0 + t);
                 stripes = step(0.5, stripes);
 
-                // Color palette: Hot Pink, Cyan, Yellow
-                vec3 c1 = vec3(1.0, 0.0, 1.0); // Pink
+                // Color palette: user selected background, Cyan, Yellow
+                vec3 c1 = bgColor; // User selected
                 vec3 c2 = vec3(0.0, 1.0, 1.0); // Cyan
                 vec3 c3 = vec3(1.0, 1.0, 0.0); // Yellow
 

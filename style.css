@@ -88,6 +88,56 @@ body {
     box-shadow: 6px 6px 0px var(--border);
 }
 
+/* Color Picker Widget */
+.color-picker-widget {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.color-label {
+    background: var(--fg);
+    color: white;
+    font-family: var(--font-heading);
+    font-weight: 900;
+    font-size: 0.9rem;
+    padding: 0.4rem 0.8rem;
+    border: 3px solid var(--border);
+    box-shadow: 3px 3px 0 var(--border);
+    text-transform: uppercase;
+}
+
+#bg-color {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 40px;
+    height: 40px;
+    border: 3px solid var(--border);
+    box-shadow: 3px 3px 0 var(--border);
+    cursor: pointer;
+    background: none;
+    padding: 0;
+}
+
+#bg-color::-webkit-color-swatch-wrapper {
+    padding: 2px;
+}
+
+#bg-color::-webkit-color-swatch {
+    border: none;
+    box-shadow: 2px 2px 0 var(--border);
+}
+
+#bg-color::-moz-color-swatch {
+    border: none;
+    box-shadow: 2px 2px 0 var(--border);
+}
+
+#bg-color:hover {
+    transform: translate(-2px, -2px);
+    box-shadow: 5px 5px 0 var(--border);
+}
+
 /* Hero */
 .hero {
     height: 100vh;

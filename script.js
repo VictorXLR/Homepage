@@ -5,6 +5,7 @@ class HyperpopEngine {
         this.camera = new THREE.OrthographicCamera(-1, 1, 1, -1, 0, 1);
         this.renderer = new THREE.WebGLRenderer({ antialias: false, alpha: true });
         this.clock = new THREE.Clock();
+        this.bgColor = new THREE.Color('#ff00ff');
         this.init();
     }
 
@@ -15,7 +16,8 @@ class HyperpopEngine {
         const geometry = new THREE.PlaneGeometry(2, 2);
         this.uniforms = {
             time: { value: 0 },
-            resolution: { value: new THREE.Vector2(window.innerWidth, window.innerHeight) }
+            resolution: { value: new THREE.Vector2(window.innerWidth, window.innerHeight) },
+            bgColor: { value: this.bgColor }
         };
 
         const material = new THREE.ShaderMaterial({
@@ -35,6 +37,12 @@ class HyperpopEngine {
         this.animate();
     }
 
+    updateBackgroundColor(hexColor) {
+        this.bgColor.set(hexColor);
+        this.uniforms.bgColor.value = this.bgColor;
+        document.documentElement.style.setProperty('--bg', hexColor);
+    }
+
     animate() {
         this.uniforms.time.value = this.clock.getElapsedTime();
         this.renderer.render(this.scene, this.camera);
@@ -49,6 +57,14 @@ class BrutalUI {
     }
 
     init() {
+        // Color picker functionality
+        const colorPicker = document.getElementById('bg-color');
+        if (colorPicker) {
+            colorPicker.addEventListener('input', (e) => {
+                this.hyperpopEngine?.updateBackgroundColor(e.target.value);
+            });
+        }
+
         // Heavy entrance
         gsap.from('.hero-title', {
             x: -200,
@@ -82,6 +98,7 @@ class BrutalUI {
 }
 
 window.addEventListener('DOMContentLoaded', () => {
-    new HyperpopEngine('canvas-container');
-    new BrutalUI();
+    const hyperpopEngine = new HyperpopEngine('canvas-container');
+    const brutalUI = new BrutalUI();
+    brutalUI.hyperpopEngine = hyperpopEngine;
 });
