@@ -3,50 +3,51 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Blog | Victor Popoola</title>
+    <title>Weblog | Victor Popoola</title>
     <meta name="description" content="Thoughts on software engineering, AI agents, systems architecture, and developer workflow." />
     <meta name="author" content="Victor Popoola" />
     <link rel="icon" href="favicon.ico" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700;800;900&family=Space+Grotesk:wght@700;900&display=swap" rel="stylesheet" />
     <link rel="stylesheet" href="style.css" />
 </head>
 <body class="weblog-page">
-    <a class="skip-link" href="#article">Skip to article</a>
+    <a class="skip-link" href="#writing">Skip to writing</a>
     <nav class="nav" aria-label="Main navigation">
         <a class="nav-logo" href="index.html">VictorXLR</a>
-        <a class="nav-link" href="index.html#weblog">All writing</a>
+        <a class="nav-link" href="index.html">Home</a>
     </nav>
-    <main class="weblog-main" id="article">
-        <article class="weblog-article">
-            <header>
-                <p class="weblog-eyebrow">Weblog / Archive</p>
-                <h1>Writing</h1>
-                <p class="weblog-deck">Thoughts on software engineering, AI agents, systems architecture, developer workflow, and building in public.</p>
-                <p class="weblog-meta">Victor Popoola · Updated November 22, 2026</p>
-            </header>
+    <main class="weblog-main" id="writing">
+        <header class="blog-header">
+            <p class="weblog-eyebrow">Weblog / Archive</p>
+            <h1>Writing</h1>
+            <p class="weblog-deck">Thoughts on software engineering, AI agents, systems architecture, developer workflow, and building in public.</p>
+            <p class="weblog-meta">Victor Popoola · Updated November 22, 2026</p>
+        </header>
 
-            <div class="blog-list">
-                <a href="ai-token-spend-review-2026.html" class="weblog-preview brutal-card">
-                    <span class="weblog-eyebrow">003 / November 22, 2026</span>
-                    <h3>1.58 billion tokens later: auditing everything I have built with AI</h3>
-                    <p>A complete ledger of 1,578,123,329 tokens across 736 agent sessions, four terminal harnesses, and over forty projects—plus why a 90.1% prompt-cache hit rate changes the economics of software engineering.</p>
-                    <span class="project-tag">Read post 003</span>
-                </a>
+        <section class="blog-list" aria-label="All posts">
+            <a href="ai-token-spend-review-2026.html" class="weblog-preview brutal-card">
+                <span class="weblog-eyebrow">003 / November 22, 2026</span>
+                <h2>1.58 billion tokens later: auditing everything I have built with AI</h2>
+                <p>A complete ledger of 1,578,123,329 tokens across 736 agent sessions, four terminal harnesses, and over forty projects—plus why a 90.1% prompt-cache hit rate changes the economics of software engineering.</p>
+                <span class="project-tag">Read post 003</span>
+            </a>
 
-                <a href="forgecode-terminal-agents-2026.html" class="weblog-preview brutal-card">
-                    <span class="weblog-eyebrow">002 / November 22, 2026</span>
-                    <h3>Coordinating AI agents in the terminal with ForgeCode</h3>
-                    <p>A review of my M4 Pro terminal setup, parallel agent orchestration with strict file-ownership contracts, and the systems and apps built on this stack so far.</p>
-                    <span class="project-tag">Read post 002</span>
-                </a>
+            <a href="forgecode-terminal-agents-2026.html" class="weblog-preview brutal-card">
+                <span class="weblog-eyebrow">002 / November 22, 2026</span>
+                <h2>Coordinating AI agents in the terminal with ForgeCode</h2>
+                <p>A review of my M4 Pro terminal setup, parallel agent orchestration with strict file-ownership contracts, and the systems and apps built on this stack so far.</p>
+                <span class="project-tag">Read post 002</span>
+            </a>
 
-                <a href="home-upgrades-2026.html" class="weblog-preview brutal-card">
-                    <span class="weblog-eyebrow">001 / November 21, 2026</span>
-                    <h3>A better home in 2026: infrastructure before gadgets</h3>
-                    <p>Practical upgrades, companies worth watching, and product ideas for healthier, more comfortable everyday living.</p>
-                    <span class="project-tag">Read post 001</span>
-                </a>
-            </div>
-        </article>
+            <a href="home-upgrades-2026.html" class="weblog-preview brutal-card">
+                <span class="weblog-eyebrow">001 / November 21, 2026</span>
+                <h2>A better home in 2026: infrastructure before gadgets</h2>
+                <p>Practical upgrades, companies worth watching, and product ideas for healthier, more comfortable everyday living.</p>
+                <span class="project-tag">Read post 001</span>
+            </a>
+        </section>
     </main>
 </body>
 </html>
