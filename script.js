@@ -69,21 +69,24 @@ class BrutalUI {
         gsap.from('.hero-title', {
             x: -200,
             opacity: 0,
-            duration: 0.8,
+            duration: 0.5,
             ease: "expo.out"
         });
 
-        gsap.from('.brutal-card', {
-            y: 100,
-            rotation: 10,
-            opacity: 0,
-            stagger: 0.1,
-            duration: 0.6,
-            ease: "back.out(1.7)",
-            scrollTrigger: {
-                trigger: '.experience-list',
-                start: 'top 80%'
-            }
+        // Snappy per-card reveal: each card animates as it enters the viewport
+        gsap.set('.brutal-card', { opacity: 0, y: 40, rotation: 3 });
+        ScrollTrigger.batch('.brutal-card', {
+            start: 'top 92%',
+            once: true,
+            onEnter: (batch) => gsap.to(batch, {
+                opacity: 1,
+                y: 0,
+                rotation: 0,
+                stagger: 0.05,
+                duration: 0.3,
+                ease: 'power3.out',
+                overwrite: true
+            })
         });
 
         // Marquee-like tilt on scroll
@@ -91,7 +94,8 @@ class BrutalUI {
             const speed = window.scrollY * 0.05;
             gsap.to('.section-label', {
                 rotation: -2 + Math.sin(speed * 0.1) * 2,
-                duration: 0.1
+                duration: 0.1,
+                overwrite: 'auto'
             });
         });
     }
