@@ -34,7 +34,7 @@
             <p>Over the last few months—across 401 tracked sessions and nearly a thousand workspace snapshots—I have moved almost all of my AI-assisted engineering out of heavy IDE sidebars and into the terminal using <strong>ForgeCode</strong>. Instead of treating an LLM like a chat window that pastes snippets into an editor, I run it as a native shell citizen that coordinates specialized sub-agents directly against my filesystem, compiler, and test runners.</p>
             <p>Here is a review of the current system I am running, how I coordinate parallel agents without letting them step on each other, and the projects I have built and shipped with this workflow so far.</p>
 
-            <aside class="weblog-note"><strong>Scope and evidence.</strong> Everything described here reflects my actual local workstation and repository state as of November 22, 2026: <code>~/.forge/.forge.toml</code>, <code>~/.zshrc</code>, <code>~/.forge/.forge.db</code> (401 conversations, 944 filesystem snapshots), and the project checkouts under <code>~/Developer</code>. Benchmarks and architectural notes come directly from those local builds and test suites.</aside>
+            <aside class="weblog-note"><strong>Scope and evidence.</strong> Everything described here reflects my local workstation configuration and repository history as of November 22, 2026 (401 tracked agent conversations and 944 workspace snapshots). Benchmarks and architectural notes come directly from those local builds and test suites.</aside>
 
             <nav class="weblog-toc" aria-label="Article contents">
                 <strong>In this post</strong>
@@ -52,21 +52,21 @@
                 <p>Before talking about agents, it helps to look at the underlying machine and shell. If the terminal is sluggish or the local runtime is starved for memory, no amount of prompt engineering will make the workflow feel good.</p>
 
                 <h3>Workstation and local inference (Apple M4 Pro, 48 GB)</h3>
-                <p>My daily driver is a 14-core Apple M4 Pro with 48 GB of unified memory running macOS 27.2. Unified memory is the deciding feature on this machine: 48 GB is enough to keep a quantized diffusion model or a 128k-context local language model warm in GPU memory while compiling Rust, Go, or Swift in the foreground.</p>
-                <p>Alongside cloud models, I keep two local inference stacks ready on disk: Apple MLX and PyTorch MPS (with <code>mflux</code> in isolated Python 3.14 virtualenvs next to Python 3.12 Torch environments), and Metal-accelerated <code>llama.cpp</code> / LM Studio servers with Flash Attention enabled—including a one-click <code>inkling.command</code> launcher serving <code>Inkling-2-Mini-Q8_0.gguf</code> with its multimodal projector at a 131,072-token context window on port 8782. Package and runtime isolation is handled by <code>uv</code>, <code>pixi</code>, <code>bun</code>, <code>deno</code>, <code>cargo</code>, and <code>zoxide</code>.</p>
+                <p>My daily driver is a 14-core Apple M4 Pro with 48 GB of unified memory. Unified memory is the deciding feature on this machine: 48 GB is enough to keep a quantized diffusion model or a 128k-context local language model warm in GPU memory while compiling Rust, Go, or Swift in the foreground.</p>
+                <p>Alongside cloud models, I keep two local inference stacks ready on disk: Apple MLX and PyTorch MPS in isolated Python virtual environments, and Metal-accelerated <code>llama.cpp</code> / LM Studio servers with Flash Attention enabled for long-context local GGUF models. Package and runtime isolation is handled by <code>uv</code>, <code>pixi</code>, <code>bun</code>, <code>deno</code>, <code>cargo</code>, and <code>zoxide</code>.</p>
 
                 <h3>Terminal, Zsh integration, and Rex</h3>
-                <p>I run Ghostty configured with unlocked frame rates (<code>window-vsync = false</code>), programming ligatures, copy-on-select, and a 10 MB scrollback buffer. Inside Zsh, ForgeCode isn't just a binary on <code>$PATH</code>; it initializes via <code>eval "$(forge zsh plugin)"</code> and <code>eval "$(forge zsh theme)"</code> right in <code>~/.zshrc</code>.</p>
+                <p>I run Ghostty configured with unlocked frame rates (<code>window-vsync = false</code>), programming ligatures, copy-on-select, and a 10 MB scrollback buffer. Inside Zsh, ForgeCode isn't just a binary on <code>$PATH</code>; it initializes via its Zsh plugin and theme hooks right in my shell startup.</p>
                 <p>That shell integration changes the feedback loop in three ways:</p>
                 <ul>
                     <li><strong>Live command traces:</strong> The agent prompt automatically receives the recent <code>&lt;command_trace&gt;</code> along with exact exit codes, so when a build or migration fails, the agent already sees what happened without manual copy-pasting.</li>
                     <li><strong>Terminal multiplexing with Rex:</strong> Alongside standard <code>tmux</code> splits, the <code>rex</code> CLI and skill let an agent open tabs, arrange panes, run commands across sessions, and inspect terminal output directly.</li>
-                    <li><strong>Local MCP bridge:</strong> Configured in <code>~/.forge/.mcp.json</code> to connect local services (such as <code>metapilot-native</code> over localhost HTTP) directly into the agent toolset.</li>
+                    <li><strong>Local MCP bridge:</strong> Connects local tooling and native helper services directly into the agent toolset over localhost.</li>
                 </ul>
 
-                <h3>The ForgeCode harness (<code>~/.forge/.forge.toml</code>)</h3>
-                <p>Out of the box, many coding agents choke when they read a large file or hit a transient API rate limit. My <code>.forge.toml</code> is tuned for high concurrency and resilience: <code>subagents = true</code>, <code>verify_todos = true</code>, <code>max_parallel_file_reads = 64</code>, <code>max_read_lines = 2000</code>, and an exponential backoff retry policy covering HTTP status codes 429 through 529.</p>
-                <p>My default session profile pairs fast OpenRouter inference (<code>z-ai/glm-4.7-flash</code> for low-latency tool dispatch) with automatic context compaction at 100k tokens and a local SQLite conversation store (<code>.forge.db</code>) backed by automatic file snapshots before every mutation.</p>
+                <h3>The ForgeCode harness</h3>
+                <p>Out of the box, many coding agents choke when they read a large file or hit a transient API rate limit. My ForgeCode config is tuned for high concurrency and resilience: parallel sub-agents enabled, todo verification enforced, up to 64 parallel file reads, and an exponential backoff retry policy for transient provider rate limits.</p>
+                <p>My default session profile pairs fast low-latency models for tool dispatch with automatic context compaction at 100k tokens and a local SQLite conversation store backed by automatic file snapshots before every mutation.</p>
             </section>
 
             <section id="coordination">
@@ -96,40 +96,40 @@
 
             <section id="projects">
                 <h2>03 / What I have worked on so far</h2>
-                <p>Reviewing the repositories in <code>~/Developer</code> and the task history in <code>~/.forge/.forge.db</code> gives a clear picture of what this terminal workflow actually produces across systems networking, mobile apps, local ML inference, and interpretability tooling.</p>
+                <p>Reviewing my project repositories and task history gives a clear picture of what this terminal workflow actually produces across systems networking, mobile apps, local ML inference, and interpretability tooling.</p>
 
                 <div class="weblog-company">
-                    <h3>Salvo (<code>territe</code>) / Delay-controlled UDP bulk file transfer in Go</h3>
+                    <h3>Salvo / Delay-controlled UDP bulk file transfer in Go</h3>
                     <p><strong>What it is:</strong> Classic TCP streams collapse when a long-haul link has both high latency and random packet loss. Built in pure Go with zero third-party dependencies, Salvo pairs a TLS 1.3 control channel (with SHA-256 certificate pinning) and an AES-128-GCM encrypted UDP data channel that paces packets using queuing delay (one-way delay delta) rather than packet loss, repairing gaps via selective NACK bitmaps and zero-copy <code>mmap</code> file I/O.</p>
-                    <p><strong>Measured results:</strong> <strong>1.2 Gbit/s</strong> encrypted throughput over loopback on a 1.5 GB payload with full SHA-256 verification, and <strong>348–438 Mbit/s</strong> through its built-in userspace WAN emulator (<code>salvo impair</code>) across 50–300 ms RTT paths with 1–3% random packet loss—scenarios where a single classic loss-based TCP stream drops below 3 Mbit/s.</p>
+                    <p><strong>Measured results:</strong> <strong>1.2 Gbit/s</strong> encrypted throughput over loopback on a 1.5 GB payload with full SHA-256 verification, and <strong>348–438 Mbit/s</strong> through its built-in userspace WAN emulator across 50–300 ms RTT paths with 1–3% random packet loss—scenarios where a single classic loss-based TCP stream drops below 3 Mbit/s.</p>
                 </div>
 
                 <div class="weblog-company">
-                    <h3>Charms (<code>Mine</code>) / Digital wardrobe &amp; social marketplace</h3>
-                    <p><strong>What it is:</strong> A full-stack React Native (Expo Router), Zustand, PostgreSQL (19+ RLS migrations), and Supabase Edge Functions app for cataloging a personal closet, planning outfits on a calendar, and trading items.</p>
-                    <p><strong>How parallel agents built it:</strong> While a read-only agent audited the 2025–2026 SQL migration chain, parallel implementation agents built the <code>security_private.content_admin_roles</code> SQL migration, the typed <code>adminContentService.ts</code> client, transactional <code>psql</code> security tests, and the React Native <code>AdminContentBrowser</code> UI—each owning disjoint files. Separate parallel runs replaced legacy vision classification with a Cloudflare Workers AI (<code>Clef</code>) fashion pipeline, migrated deep links from <code>mine://</code> to <code>charms://</code>, enforced default-off notification privacy, and codified database deployment rules into a reusable <code>maintain-supabase</code> skill.</p>
+                    <h3>Charms / Digital wardrobe &amp; social marketplace</h3>
+                    <p><strong>What it is:</strong> A full-stack React Native (Expo Router), Zustand, PostgreSQL, and Supabase Edge Functions app for cataloging a personal closet, planning outfits on a calendar, and trading items.</p>
+                    <p><strong>How parallel agents built it:</strong> While a read-only agent audited the SQL migration chain, parallel implementation agents built the role-based content admin migration, the typed admin client service, transactional database security tests, and the React Native moderation UI—each owning disjoint files. Separate parallel runs replaced legacy vision classification with a Cloudflare Workers AI fashion pipeline, migrated the app's deep-link scheme, enforced default-off notification privacy, and codified database deployment rules into a reusable agent skill.</p>
                 </div>
 
                 <div class="weblog-company">
                     <h3>Slize / Hand-drawn NYC craft cocktail notebook &amp; shift game</h3>
                     <p><strong>What it is:</strong> An interactive cocktail journal and playable NYC neighborhood bartender shift game built with Expo, React Native Reanimated, <code>Rough.js</code>, and a Cloudflare Worker recipe backend.</p>
-                    <p><strong>How agents shaped it:</strong> When an early pass drifted toward generic rounded SaaS cards, I used scoped file-ownership tasks to strip out the boilerplate and rebuild the UI around <code>Rough.js</code> vector hachures, Courier typography, paper textures, and a 120Hz physics-driven Cocktail Dial with haptic ticks, alongside an offline bartender shift game (<code>pour.tsx</code>, <code>bartenderGame.ts</code>) and a freestyle home-bar matcher.</p>
+                    <p><strong>How agents shaped it:</strong> When an early pass drifted toward generic rounded SaaS cards, I used scoped file-ownership tasks to strip out the boilerplate and rebuild the UI around <code>Rough.js</code> vector hachures, Courier typography, paper textures, and a 120Hz physics-driven Cocktail Dial with haptic ticks, alongside an offline bartender shift game and a freestyle home-bar matcher.</p>
                 </div>
 
                 <div class="weblog-company">
                     <h3><a href="https://github.com/VictorXLR/z-image-turbo">Turbo-Term</a> &amp; Flux-UI / Local Apple Silicon image generation</h3>
-                    <p><strong>What they are:</strong> Two zero-API-cost creative tools built for the M4 Pro's 48 GB unified memory.</p>
-                    <p><strong>How they work:</strong> <strong>Turbo-Term (<code>z-image-turbo</code>)</strong> runs <code>Tongyi-MAI/Z-Image-Turbo</code> and renders images inline inside Ghostty via the Kitty graphics protocol, backed by single-keystroke hotkeys for seed variations, 2x re-renders, and a persistent <code>mlx_worker.py</code> subprocess that keeps quantized <code>mflux</code> weights warm between prompts. <strong>Flux-UI</strong> pairs a custom <code>tldraw</code> infinite canvas with a local FastAPI + PyTorch MPS backend running 4-step distilled <code>FLUX.2-klein-9B</code> for visual text-to-image and image-to-image node chaining.</p>
+                    <p><strong>What they are:</strong> Two zero-API-cost creative tools built for Apple Silicon unified memory.</p>
+                    <p><strong>How they work:</strong> <strong>Turbo-Term (<code>z-image-turbo</code>)</strong> runs <code>Tongyi-MAI/Z-Image-Turbo</code> and renders images inline inside Ghostty via the Kitty graphics protocol, backed by single-keystroke hotkeys for seed variations, 2x re-renders, and a persistent MLX worker subprocess that keeps quantized <code>mflux</code> weights warm between prompts. <strong>Flux-UI</strong> pairs a custom <code>tldraw</code> infinite canvas with a local FastAPI + PyTorch MPS backend running 4-step distilled <code>FLUX.2-klein-9B</code> for visual text-to-image and image-to-image node chaining.</p>
                 </div>
 
                 <h3>Smaller research builds and native utilities</h3>
                 <ul>
-                    <li><strong>vector-state (<code>outmen</code>):</strong> Reads an LLM's residual stream using <code>transformer-lens</code> and Sparse Autoencoders (<code>sae-lens</code>) and renders internal activation states as crisp pictogram signage.</li>
-                    <li><strong>HRM browser RL &amp; Neural ASM:</strong> Recurrent two-timescale actor-critic models (<code>hrm-game</code>) running in Web Workers with TensorFlow.js for Doom, Pac-Man, and Flappy Bird, plus a differentiable CPU-like reference executor (<code>neural_asm.py</code>) and multiscale city ecosystem simulations (<code>ai/stem</code>).</li>
-                    <li><strong>oopa:</strong> A single-binary Go clone of Magic Todo that serves both a full-screen terminal UI and an embedded local web server, recursively breaking overwhelming tasks into small steps against a local LM Studio model.</li>
+                    <li><strong>vector-state:</strong> Reads an LLM's residual stream using <code>transformer-lens</code> and Sparse Autoencoders (<code>sae-lens</code>) and renders internal activation states as crisp pictogram signage.</li>
+                    <li><strong>HRM browser RL &amp; Neural ASM:</strong> Recurrent two-timescale actor-critic models running in Web Workers with TensorFlow.js for Doom, Pac-Man, and Flappy Bird, plus a differentiable CPU-like reference executor and multiscale city ecosystem simulations.</li>
+                    <li><strong>oopa:</strong> A single-binary Go clone of Magic Todo that serves both a full-screen terminal UI and an embedded local web server, recursively breaking overwhelming tasks into small steps against a local language model.</li>
                     <li><strong>bitchat-bot:</strong> A Swift bot supporting Nostr WebSocket relays, cryptographic event signing, and offline command responders, built by running transport and responder agents in parallel.</li>
                     <li><strong>btcd:</strong> A zero-bundler WebAssembly runner with a custom binary LEB128 section inspector and hand-written <code>.wat</code> demos (image-guided Conway's Game of Life, Tetris, Mandelbrot).</li>
-                    <li><strong>Tree Hugger, After Party &amp; VoiceInk:</strong> Native iOS/macOS Swift apps—from clustering 700,000 NYC street trees via Socrata to a privacy-first social memory log and a custom-patched local build of VoiceInk.</li>
+                    <li><strong>Tree Hugger &amp; After Party:</strong> Native iOS/macOS Swift apps—from clustering 700,000 NYC street trees via Socrata to a privacy-first social memory log.</li>
                 </ul>
             </section>
 

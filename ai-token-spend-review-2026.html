@@ -1,0 +1,199 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>1.58 billion tokens later: auditing everything I have built with AI | Victor Popoola</title>
+    <meta name="description" content="A full ledger of 1.58 billion tokens across 736 agent sessions, four terminal harnesses, and over forty projects—from consumer apps and systems networking to local vision models and mechanistic interpretability." />
+    <meta name="author" content="Victor Popoola" />
+    <meta property="og:type" content="article" />
+    <meta property="og:title" content="1.58 billion tokens later: auditing everything I have built with AI" />
+    <meta property="og:description" content="Where 1,578,123,329 tokens actually went across fourteen months of building software with AI agents, and why prompt caching changes the economics of software engineering." />
+    <meta property="og:url" content="https://victorxlr.me/ai-token-spend-review-2026.html" />
+    <meta property="article:published_time" content="2026-11-22" />
+    <link rel="canonical" href="https://victorxlr.me/ai-token-spend-review-2026.html" />
+    <link rel="icon" href="favicon.ico" />
+    <link rel="stylesheet" href="style.css" />
+</head>
+<body class="weblog-page">
+    <a class="skip-link" href="#article">Skip to article</a>
+    <nav class="nav" aria-label="Main navigation">
+        <a class="nav-logo" href="index.html">VictorXLR</a>
+        <a class="nav-link" href="index.html#weblog">All writing</a>
+    </nav>
+    <main class="weblog-main" id="article">
+        <article class="weblog-article">
+            <header>
+                <p class="weblog-eyebrow">Weblog / 003 / AI economics &amp; project retrospective</p>
+                <h1>1.58 billion tokens later: auditing everything I have built with AI</h1>
+                <p class="weblog-deck">Most developers have no idea how many tokens they burn because the meter is hidden behind a $20 subscription or a scatter of API dashboards. I queried every local database on my machine to see where 1,578,123,329 tokens actually went.</p>
+                <p class="weblog-meta">Victor Popoola · <time datetime="2026-11-22">November 22, 2026</time> · 10-minute read</p>
+            </header>
+
+            <p>After writing <a href="forgecode-terminal-agents-2026.html">Weblog 002</a> on how I coordinate AI agents in the terminal, I wanted to answer a simpler question: <strong>how many tokens have I actually consumed since I started building software with AI agents, and what did all of that compute produce?</strong></p>
+            <p>Because terminal-native harnesses persist their full conversation state and turn-by-turn API telemetry in local SQLite databases and JSONL logs on disk, you don't have to guess. You can join the tables, sum every prompt, cache read, reasoning trace, and completion token, and map the ledger back to the exact projects that consumed them.</p>
+            <p>Across fourteen months of tracked agent history (September 2025 through November 2026), the grand total comes out to <strong>1,578,123,329 tokens</strong> across <strong>736 coding sessions</strong> and more than <strong>15,000 agent turns</strong>. Here is the full accounting of the harnesses, the token economics, and every project I have built along the way.</p>
+
+            <aside class="weblog-note"><strong>Scope and evidence.</strong> Token counts were aggregated directly from local telemetry stores across four coding harnesses (ForgeCode, OpenCode, Codex CLI, and Claude Code) plus local LM Studio inference logs as of November 22, 2026. Figures exclude untracked browser chat tabs and background IDE autocomplete (where Cursor recorded 1,280 accepted code blocks across 489 scored commits without raw token counts).</aside>
+
+            <nav class="weblog-toc" aria-label="Article contents">
+                <strong>In this post</strong>
+                <ol>
+                    <li><a href="#ledger">The 1.58-billion-token ledger</a></li>
+                    <li><a href="#economics">Why 1.58 billion tokens didn't cost a fortune</a></li>
+                    <li><a href="#timeline">How my usage evolved over fourteen months</a></li>
+                    <li><a href="#projects">Reviewing everything I have built so far</a></li>
+                    <li><a href="#takeaways">What the token ledger taught me</a></li>
+                </ol>
+            </nav>
+
+            <section id="ledger">
+                <h2>01 / The 1.58-billion-token ledger</h2>
+                <p>Before settling on my current terminal workflow, I rotated through four main agent harnesses. Every one of them logs token usage slightly differently, so normalizing them into a single table makes the distribution obvious:</p>
+
+                <div class="weblog-company">
+                    <h3>1. ForgeCode / 769,879,918 tokens (48.8% of total)</h3>
+                    <p><strong>Volume:</strong> 401 conversations (including 153 spawned sub-agent sessions) and 7,351 API turns.</p>
+                    <p><strong>Token split:</strong> 764,458,295 prompt tokens (of which <strong>699,311,648 were cache hits</strong>—a 91.5% cache ratio) and 5,421,623 completion tokens across 1,683 modified files (+214,686 / −35,843 lines).</p>
+                    <p><strong>Role:</strong> My primary daily driver since mid-2026 for multi-agent orchestration, parallel file-ownership tasks, and heavy full-stack refactors.</p>
+                </div>
+
+                <div class="weblog-company">
+                    <h3>2. OpenCode / 344,167,268 tokens (21.8% of total)</h3>
+                    <p><strong>Volume:</strong> 239 sessions and 5,509 assistant turns.</p>
+                    <p><strong>Token split:</strong> 49,215,913 uncached input tokens, <strong>285,375,180 cache-read tokens</strong>, 4,580,295 cache-write tokens, 4,522,068 output tokens, and 473,812 reasoning tokens.</p>
+                    <p><strong>Role:</strong> My bridge harness from late 2025 through mid-2026, used heavily to test frontier models side by side—from Claude Opus and Sonnet to Qwen3-Coder, GLM-4.7, Kimi K2.5, DeepSeek, MiniMax M2, and local MLX/LM Studio models.</p>
+                </div>
+
+                <div class="weblog-company">
+                    <h3>3. Codex CLI / 325,478,780 tokens (20.6% of total)</h3>
+                    <p><strong>Volume:</strong> 88 threads across OpenAI reasoning and coding models.</p>
+                    <p><strong>Role:</strong> My earliest high-volume coding agent in Autumn 2025 and my go-to second opinion for gnarly state-management loops, codebase comprehension maps, and Swift/macOS desktop debugging.</p>
+                </div>
+
+                <div class="weblog-company">
+                    <h3>4. Claude Code / 138,597,363 tokens (8.8% of total)</h3>
+                    <p><strong>Volume:</strong> 8 long-horizon sessions and 2,230 turns.</p>
+                    <p><strong>Token split:</strong> 1,980,773 uncached input tokens, <strong>126,389,012 cache-read tokens</strong>, 9,233,735 cache-creation tokens, and 993,843 output tokens.</p>
+                    <p><strong>Role:</strong> Concentrated marathon sessions for hardware MIDI controller integration, terminal multiplexer migrations, and web design passes.</p>
+                </div>
+            </section>
+
+            <section id="economics">
+                <h2>02 / Why 1.58 billion tokens didn't cost a fortune</h2>
+                <p>If you priced 1.58 billion tokens at standard 2024 frontier rates ($15 per million input tokens and $75 per million output tokens), this ledger would represent more than <strong>$24,000</strong> in raw API billing. In reality, my direct metered pay-as-you-go API spend across ForgeCode and OpenCode totaled <strong>$325.43</strong> ($258.53 in ForgeCode and $66.90 in OpenCode), supplemented by flat-rate Pro/Max subscriptions and local Apple Silicon inference.</p>
+                <p>Three structural shifts in how coding agents consume tokens explain that 70x gap:</p>
+                <ul>
+                    <li><strong>Prompt caching is the entire game (90.1% cache hit rate):</strong> Agent loops re-send the system prompt, tool definitions, file trees, and conversation history on every single turn. Out of the 1.25 billion tokens where turn-level cache telemetry was recorded, <strong>1.11 billion tokens (90.1%) were served from provider prompt caches</strong> at a ~90% discount, while only <strong>11.4 million tokens (0.9%) were newly generated output tokens</strong>. For every 1 token an agent writes, it reads roughly 110 tokens of context.</li>
+                    <li><strong>Tiered model routing:</strong> You don't need a heavyweight flagship model to run <code>git status</code> or read a JSON schema. Routing high-frequency tool dispatch to fast, low-cost coding models (such as <code>glm-4.7-flash</code>, <code>qwen3-coder</code>, or <code>kimi-k2.5</code>) while reserving frontier reasoning models for architecture planning cuts per-session cost by an order of magnitude.</li>
+                    <li><strong>Offloading iteration loops to unified memory:</strong> Anytime a project needed tight feedback loops—like generating hundreds of diffusion images, testing recursive task breakdown in a TUI, or running vision-language captioning—I pointed the harness at local Apple MLX, PyTorch MPS, or <code>llama.cpp</code> servers where the marginal token cost is zero.</li>
+                </ul>
+            </section>
+
+            <section id="timeline">
+                <h2>03 / How my usage evolved over fourteen months</h2>
+                <p>Looking at the monthly token curve shows three distinct phases in how I work with AI:</p>
+                <ul>
+                    <li><strong>Phase 1 — Single-thread exploration (Sept–Dec 2025 · 285.9M tokens):</strong> Started at 118.0M tokens in September 2025 with Codex CLI, dipped to 9.7M in October, and climbed back to 47.4M in November and 110.8M in December as I adopted OpenCode to build encrypted messaging prototypes, browser RL models, and local Rust inference engines.</li>
+                    <li><strong>Phase 2 — Focused local &amp; systems builds (Jan–Aug 2026 · 199.4M tokens):</strong> After a quiet January and February focused on non-agent coding, usage scaled steadily from 14.9M tokens in March and 13.5M in April to 44.0M in May, 45.8M in June, and 75.6M in August as I built native iOS/macOS utilities, Go CLI tools, and local image generation pipelines.</li>
+                    <li><strong>Phase 3 — Multi-agent terminal orchestration (Sept–Nov 2026 · 1,093.1M tokens):</strong> Moving full-time into parallel sub-agent workflows in ForgeCode pushed monthly volume to <strong>342.7M tokens in September 2026</strong> and a peak of <strong>689.7M tokens in October 2026</strong> (across 329 sessions and 6,488 turns), followed by 60.6M tokens through November 22. Parallelizing read-only research agents alongside scoped implementation workers multiplied token throughput—and shipping speed—by 5x.</li>
+                </ul>
+            </section>
+
+            <section id="projects">
+                <h2>04 / Reviewing everything I have built so far</h2>
+                <p>When you group the 1.58 billion tokens by repository, they cluster into six engineering domains. Here is a complete review of what those tokens actually built, ranked from my largest multi-hundred-million-token flagships down to weekend hardware and compiler experiments.</p>
+
+                <div class="weblog-company">
+                    <h3>1. Full-stack consumer &amp; mobile apps (515.1M tokens)</h3>
+                    <p><strong>Charms · 386.4M tokens (257 sessions across all 4 harnesses):</strong> My largest project by far—consuming nearly a quarter of every token I have ever spent. Charms is a React Native (Expo Router), Zustand, and Supabase digital wardrobe and social marketplace. Over fourteen months, agents helped take it from initial closet cataloging and camera background cleanup through 19+ PostgreSQL Row-Level Security migrations, Google/Apple/phone authentication, virtual trip packing, a Cloudflare Workers AI fashion vision pipeline, and a full role-based content moderation suite.</p>
+                    <p><strong>Slize · 98.1M tokens (37 sessions):</strong> An NYC craft cocktail notebook and playable neighborhood bartender shift game built with Expo, React Native Reanimated, and <code>Rough.js</code>. Agents helped build the 120Hz haptic Cocktail Dial, the hand-drawn vector ink aesthetic, the offline shift-pouring game engine, and the Cloudflare Worker recipe backend.</p>
+                    <p><strong>New Friend Store · 17.6M tokens:</strong> A free community item-sharing platform built with Next.js 15, TypeScript, Supabase, and OpenNext on Cloudflare Workers with an editorial, high-contrast catalog layout.</p>
+                    <p><strong>Punk · 5.8M tokens:</strong> An early Expo mobile prototype blending daily habit tracking with cozy farming-RPG progression mechanics.</p>
+                    <p><strong>After Party · 5.3M tokens:</strong> A privacy-first native iOS social memory and event log built in Swift.</p>
+                    <p><strong>Felloff &amp; GlitchFX Pro:</strong> A Next.js internet culture analytics archive and a React Native computational glitch-art photo studio.</p>
+                </div>
+
+                <div class="weblog-company">
+                    <h3>2. Developer tools, agent harnesses &amp; visual canvases (307.9M tokens)</h3>
+                    <p><strong>Diorama · 193.9M tokens (28 sessions):</strong> My second-largest token sink. Diorama is an interactive Excalidraw-style whiteboard harness that binds to a local Git repository, indexes files and symbol call graphs into visual architecture maps, and lets an LLM agent modify code directly from the canvas over a Python/Bun WebSocket bridge.</p>
+                    <p><strong>Modelo (<code>cowyo2</code>) · 61.5M tokens (10 sessions):</strong> A modernized, zero-friction collaborative wiki and interactive CodeMirror/Python notebook frontend built atop a fast Go + SQLite backend.</p>
+                    <p><strong>Homepage (this site) · 24.7M tokens (14 sessions):</strong> Interactive WebGL seascape shaders, custom editorial typography, and these long-form engineering retrospectives.</p>
+                    <p><strong>ForgeCode contributions · 20.2M tokens (29 sessions):</strong> Dogfooding ForgeCode to build and test features inside ForgeCode itself—specifically implementing OpenRouter flex/service-tier provider routing and interactive CLI controls.</p>
+                    <p><strong>LiveDOMSync · 8.1M tokens:</strong> A drop-in browser DevTools inspector and React-Scan-style overlay that highlights live DOM mutations and syncs in-place text edits back to source files.</p>
+                    <p><strong>MadeWithJelly &amp; Infinite-Web · 3.2M tokens:</strong> A Three.js / React Three Fiber interactive 3D jelly landing page and an LLM web-simulator that generates complete interactive websites from synthetic URL prompts.</p>
+                </div>
+
+                <div class="weblog-company">
+                    <h3>3. Local computer vision, diffusion &amp; browser RL (116.6M tokens)</h3>
+                    <p><strong>SAM-3 pipeline &amp; Image Cutout · 36.8M tokens:</strong> Local Python server and browser segmentation tools built around Meta's Segment Anything Model for one-click object isolation and asset extraction.</p>
+                    <p><strong>HRM Game &amp; Flappy-ML · 34.6M tokens (13 sessions):</strong> A generalizable two-timescale Hierarchical Recurrent Model (HRM) running reinforcement learning and neuroevolution inside browser Web Workers with TensorFlow.js across Pac-Man, Flappy Bird, and a JS-DOS Doom environment.</p>
+                    <p><strong><a href="https://github.com/VictorXLR/z-image-turbo">Turbo-Term (<code>z-image-turbo</code>)</a> &amp; Flux-UI · 35.0M tokens (18 sessions):</strong> Local Apple Silicon image generation tools—rendering <code>Z-Image-Turbo</code> directly inside Ghostty terminal panes via the Kitty graphics protocol with a warm MLX worker, plus a custom <code>tldraw</code> node canvas driving 4-step distilled <code>FLUX.2-klein-9B</code> over FastAPI and PyTorch MPS.</p>
+                    <p><strong><a href="https://github.com/VictorXLR/fastvlm-video">FastVLM WebGPU</a> · 9.5M tokens (9 sessions):</strong> Real-time local video captioning running Apple's FastVLM vision-language model completely client-side in the browser via WebGPU.</p>
+                    <p><strong> Field RL Canvas (<code>stem</code>) · 2.3M tokens:</strong> Browser-local ONNX reinforcement learning and a pure multiscale NYC city and subway ecosystem simulation with real-time held-out policy evaluation.</p>
+                </div>
+
+                <div class="weblog-company">
+                    <h3>4. Systems networking, cryptography &amp; native utilities (218.2M tokens)</h3>
+                    <p><strong><a href="https://github.com/VictorXLR/secretchat">Secretchat</a> · 63.8M tokens (19 sessions):</strong> An end-to-end encrypted messaging platform with offline-first mobile support, client-side cryptographic key management, and alternate-reality game (ARG) mechanics, coordinated using the <code>beads</code> issue tracker.</p>
+                    <p><strong>Boring Notch · 38.2M tokens (4 sessions):</strong> Custom multi-face idle animations, visibility state machines, and media controls for the macOS MacBook notch.</p>
+                    <p><strong>SightVibe · 29.1M tokens:</strong> A native macOS utility turning the MacBook Touch Bar and screen into an interactive guided breathing and rest-timer visualization.</p>
+                    <p><strong>BitChat Nostr Bot · 27.2M tokens (5 sessions):</strong> A Swift bot implementing Nostr WebSocket relay transport, cryptographic event signing, geohash channel discovery, and offline whitepaper auto-responders.</p>
+                    <p><strong>oopa · 22.7M tokens (8 sessions):</strong> A single-binary Go task breakdown engine (inspired by Goblin Tools' Magic Todo) that ships both a Bubble Tea terminal UI and an embedded web UI backed by local LLMs.</p>
+                    <p><strong>VoiceInk &amp; Clay Whisper · 18.7M tokens (10 sessions):</strong> Local speech-to-text transcription tools on macOS, including a C + Clay UI + <code>whisper.cpp</code> desktop transcriber and maintaining a custom local build of VoiceInk.</p>
+                    <p><strong>Tree Hugger · 12.2M tokens:</strong> A native iOS Swift app indexing and clustering nearly 700,000 NYC street trees from Socrata open data.</p>
+                    <p><strong>btcd · 10.7M tokens:</strong> A zero-bundler WebAssembly runtime and binary LEB128 section inspector with hand-written WebAssembly Text (<code>.wat</code>) simulations.</p>
+                    <p><strong>Salvo &amp; RustFast UDP · 3.2M tokens:</strong> High-speed encrypted bulk UDP file transfer protocols in Go and Rust engineered to saturate high-RTT, lossy WAN links using queuing-delay congestion control.</p>
+                </div>
+
+                <div class="weblog-company">
+                    <h3>5. Mechanistic interpretability, local runtimes &amp; ML research (65.9M tokens)</h3>
+                    <p><strong>vector-state · 17.7M tokens (5 sessions):</strong> Mechanistic interpretability CLI and visualizer using <code>transformer-lens</code> and Sparse Autoencoders (<code>sae-lens</code>) on Apple MPS to project internal LLM residual-stream activations into pictogram signage.</p>
+                    <p><strong>lmwatch (<code>qwnestp</code>) · 16.2M tokens (5 sessions):</strong> A C++ runtime monitor and inference profiler for tracking local LM Studio model memory and token generation throughput.</p>
+                    <p><strong><a href="https://github.com/VictorXLR/cortex">Cortex</a> · 10.5M tokens:</strong> A native Rust AI inference and persistent memory runtime built on Hugging Face's Candle framework for local GGUF models.</p>
+                    <p><strong>TurboQuant MLX &amp; Mistral.rs · 11.1M tokens (11 sessions):</strong> Local quantization experiments on Apple MLX and multimodal server debugging on <code>mistral.rs</code>.</p>
+                    <p><strong>Neural Assembly (<code>neural_asm</code>) · 3.8M tokens (7 sessions):</strong> A differentiable CPU-like register and memory execution pipeline in PyTorch trained to execute assembly-style instructions end to end.</p>
+                    <p><strong>Radiology LLM Fine-Tuning &amp; Cross-OS GPU Connector · 2.1M tokens:</strong> A local Qwen fine-tuning and evaluation pipeline for structured clinical report bootstrapping, plus a network bridge for offloading Mac AI workloads to a Windows GPU box.</p>
+                </div>
+
+                <div class="weblog-company">
+                    <h3>6. Hardware, creative music tools &amp; multiplayer experiments (190.9M tokens)</h3>
+                    <p><strong>MPD218 &amp; EP-133 K.O. II Companion Tools · 126.4M tokens:</strong> Two deep-dive hardware sessions (across Claude Code and Codex) building a local musical co-pilot and kit preset loader for an Akai MPD218 pad controller alongside companion web tooling for Teenage Engineering's EP-133 K.O. II sampler and a custom Stem Player OS (<code>museSTEM</code>).</p>
+                    <p><strong>DuckProject · 19.2M tokens:</strong> A multiplayer Python FastAPI + WebSocket typing race game where minecarts accelerate in real time based on players' words-per-minute.</p>
+                    <p><strong>CyberChef AI &amp; LmChef · 13.1M tokens:</strong> Wrapping GCHQ's CyberChef data-analysis toolkit inside a React shell with a local AI recipe copilot overlay.</p>
+                    <p><strong>PS Vita Optimization, Apple Watch, Silicon Labs UART &amp; Cat Drone · 22.8M tokens:</strong> Embedded and hardware side quests—including PS Vita homebrew pipeline optimization, deploying a custom WatchOS target, debugging a Silicon Labs UART bridge, a zero-API Govee LAN light matrix controller, and configuring a USB-tethered BetaFPV Pavo micro-drone and laser turret to entertain my cat.</p>
+                </div>
+            </section>
+
+            <section id="takeaways">
+                <h2>05 / What the token ledger taught me</h2>
+                <p>Auditing 1.58 billion tokens across forty-plus repositories makes a few patterns impossible to ignore:</p>
+                <ol>
+                    <li><strong>Tokens are a proxy for context breadth, not code volume.</strong> My highest-token sessions weren't the ones that generated the most lines of code; they were the sessions where an agent dragged a 90,000-token conversation history across fifty turns while debugging a subtle hardware or state-synchronization bug. Keeping sessions short and scoped around a written plan cuts token burn in half.</li>
+                    <li><strong>Prompt caching makes modular architecture cheaper.</strong> Because 90% of agent tokens are cache reads of your existing codebase and tool definitions, clean file boundaries don't just help humans—they keep the prefix cache hot and prevent agents from re-reading monoliths on every turn.</li>
+                    <li><strong>The best projects combine cloud reasoning with local execution.</strong> Cloud agents are unmatched at orchestrating multi-file refactors across TypeScript, Go, Rust, and SQL. Local Apple Silicon models are unmatched when you want an application itself to think, see, transcribe, or generate images with zero ongoing API tax.</li>
+                </ol>
+                <p>One and a half billion tokens sounds massive on paper, but spread across fourteen months of continuous shipping, it is simply the new unit of software iteration—the modern equivalent of compiler cycles.</p>
+            </section>
+
+            <section id="sources" class="weblog-sources">
+                <h2>Related writing and public repositories</h2>
+                <p>Token telemetry was audited from local SQLite and JSONL stores on November 22, 2026.</p>
+                <ul>
+                    <li><a href="forgecode-terminal-agents-2026.html">Weblog 002: Coordinating AI agents in the terminal with ForgeCode</a></li>
+                    <li><a href="home-upgrades-2026.html">Weblog 001: A better home in 2026: infrastructure before gadgets</a></li>
+                    <li><a href="https://github.com/VictorXLR/z-image-turbo">VictorXLR/z-image-turbo: terminal-native image generation on Apple Silicon</a></li>
+                    <li><a href="https://github.com/VictorXLR/cortex">VictorXLR/cortex: Rust local AI inference and memory runtime</a></li>
+                    <li><a href="https://github.com/VictorXLR/fastvlm-video">VictorXLR/fastvlm-video: client-side WebGPU video captioning</a></li>
+                    <li><a href="https://github.com/VictorXLR/secretchat">VictorXLR/secretchat: end-to-end encrypted messaging platform</a></li>
+                </ul>
+            </section>
+            <footer class="weblog-end">
+                <p>Curious how your own local agent databases stack up?</p>
+                <a href="mailto:victorxlr007@gmail.com?subject=AI%20token%20spend%20audit">Compare notes or ask about a project</a>
+                <p><a href="index.html#weblog">Back to the weblog</a></p>
+            </footer>
+        </article>
+    </main>
+</body>
+</html>
