@@ -278,8 +278,10 @@ body {
 .section-header {
     display: flex;
     align-items: center;
+    justify-content: space-between;
     flex-wrap: wrap;
     gap: 1.5rem;
+    max-width: 960px;
     margin-bottom: 3rem;
 }
 
@@ -299,7 +301,8 @@ body {
     gap: 2.5rem;
 }
 
-.view-all-btn {
+.view-all-btn,
+.view-all-btn:visited {
     display: inline-block;
     background: var(--yellow);
     color: var(--fg);
