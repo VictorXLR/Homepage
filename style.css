@@ -280,6 +280,11 @@ body {
     scroll-margin-top: 8rem;
 }
 
+.weblog-list {
+    display: grid;
+    gap: 2.5rem;
+}
+
 .weblog-preview {
     display: grid;
     gap: 1.5rem;
@@ -379,6 +384,14 @@ body {
 
 .weblog-article a:hover {
     background: var(--yellow);
+}
+
+.weblog-article code {
+    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+    font-size: 0.9em;
+    background: #fff;
+    border: 2px solid var(--border);
+    padding: 0.08rem 0.35rem;
 }
 
 .weblog-article section {

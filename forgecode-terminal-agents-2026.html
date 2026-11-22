@@ -1,0 +1,168 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Coordinating AI agents in the terminal with ForgeCode | Victor Popoola</title>
+    <meta name="description" content="A review of my current M4 Pro terminal workstation, how I use ForgeCode to coordinate parallel AI agents (Forge, Muse, Sage) with strict file-ownership contracts, and the projects built on this stack so far." />
+    <meta name="author" content="Victor Popoola" />
+    <meta property="og:type" content="article" />
+    <meta property="og:title" content="Coordinating AI agents in the terminal with ForgeCode" />
+    <meta property="og:description" content="How my terminal setup works, why file-ownership contracts matter for parallel agents, and a review of what I have shipped on this harness." />
+    <meta property="og:url" content="https://victorxlr.me/forgecode-terminal-agents-2026.html" />
+    <meta property="article:published_time" content="2026-11-22" />
+    <link rel="canonical" href="https://victorxlr.me/forgecode-terminal-agents-2026.html" />
+    <link rel="icon" href="favicon.ico" />
+    <link rel="stylesheet" href="style.css" />
+</head>
+<body class="weblog-page">
+    <a class="skip-link" href="#article">Skip to article</a>
+    <nav class="nav" aria-label="Main navigation">
+        <a class="nav-logo" href="index.html">VictorXLR</a>
+        <a class="nav-link" href="index.html#weblog">All writing</a>
+    </nav>
+    <main class="weblog-main" id="article">
+        <article class="weblog-article">
+            <header>
+                <p class="weblog-eyebrow">Weblog / 002 / Systems &amp; developer workflow</p>
+                <h1>Coordinating AI agents in the terminal with ForgeCode</h1>
+                <p class="weblog-deck">GUI wrappers come and go. A fast terminal, explicit file-ownership boundaries, and a multi-agent harness that respects your shell history get actual software shipped.</p>
+                <p class="weblog-meta">Victor Popoola · <time datetime="2026-11-22">November 22, 2026</time> · 8-minute read</p>
+            </header>
+
+            <p>In my <a href="home-upgrades-2026.html">first post</a>, I argued that home technology should be judged like plumbing: infrastructure comes before gadgets, and anything that adds maintenance without solving a real problem hasn't earned its keep. I hold my software engineering environment to the exact same standard.</p>
+            <p>Over the last few months—across 401 tracked sessions and nearly a thousand workspace snapshots—I have moved almost all of my AI-assisted engineering out of heavy IDE sidebars and into the terminal using <strong>ForgeCode</strong>. Instead of treating an LLM like a chat window that pastes snippets into an editor, I run it as a native shell citizen that coordinates specialized sub-agents directly against my filesystem, compiler, and test runners.</p>
+            <p>Here is a review of the current system I am running, how I coordinate parallel agents without letting them step on each other, and the projects I have built and shipped with this workflow so far.</p>
+
+            <aside class="weblog-note"><strong>Scope and evidence.</strong> Everything described here reflects my actual local workstation and repository state as of November 22, 2026: <code>~/.forge/.forge.toml</code>, <code>~/.zshrc</code>, <code>~/.forge/.forge.db</code> (401 conversations, 944 filesystem snapshots), and the project checkouts under <code>~/Developer</code>. Benchmarks and architectural notes come directly from those local builds and test suites.</aside>
+
+            <nav class="weblog-toc" aria-label="Article contents">
+                <strong>In this post</strong>
+                <ol>
+                    <li><a href="#system">Reviewing the current system</a></li>
+                    <li><a href="#coordination">How I coordinate agents in the terminal</a></li>
+                    <li><a href="#projects">What I have worked on so far</a></li>
+                    <li><a href="#lessons">What breaks and how to keep it sane</a></li>
+                    <li><a href="#sources">System files and project links</a></li>
+                </ol>
+            </nav>
+
+            <section id="system">
+                <h2>01 / Reviewing the current system</h2>
+                <p>Before talking about agents, it helps to look at the underlying machine and shell. If the terminal is sluggish or the local runtime is starved for memory, no amount of prompt engineering will make the workflow feel good.</p>
+
+                <h3>Workstation and local inference (Apple M4 Pro, 48 GB)</h3>
+                <p>My daily driver is a 14-core Apple M4 Pro with 48 GB of unified memory running macOS 27.2. Unified memory is the deciding feature on this machine: 48 GB is enough to keep a quantized diffusion model or a 128k-context local language model warm in GPU memory while compiling Rust, Go, or Swift in the foreground.</p>
+                <p>Alongside cloud models, I keep two local inference stacks ready on disk: Apple MLX and PyTorch MPS (with <code>mflux</code> in isolated Python 3.14 virtualenvs next to Python 3.12 Torch environments), and Metal-accelerated <code>llama.cpp</code> / LM Studio servers with Flash Attention enabled—including a one-click <code>inkling.command</code> launcher serving <code>Inkling-2-Mini-Q8_0.gguf</code> with its multimodal projector at a 131,072-token context window on port 8782. Package and runtime isolation is handled by <code>uv</code>, <code>pixi</code>, <code>bun</code>, <code>deno</code>, <code>cargo</code>, and <code>zoxide</code>.</p>
+
+                <h3>Terminal, Zsh integration, and Rex</h3>
+                <p>I run Ghostty configured with unlocked frame rates (<code>window-vsync = false</code>), programming ligatures, copy-on-select, and a 10 MB scrollback buffer. Inside Zsh, ForgeCode isn't just a binary on <code>$PATH</code>; it initializes via <code>eval "$(forge zsh plugin)"</code> and <code>eval "$(forge zsh theme)"</code> right in <code>~/.zshrc</code>.</p>
+                <p>That shell integration changes the feedback loop in three ways:</p>
+                <ul>
+                    <li><strong>Live command traces:</strong> The agent prompt automatically receives the recent <code>&lt;command_trace&gt;</code> along with exact exit codes, so when a build or migration fails, the agent already sees what happened without manual copy-pasting.</li>
+                    <li><strong>Terminal multiplexing with Rex:</strong> Alongside standard <code>tmux</code> splits, the <code>rex</code> CLI and skill let an agent open tabs, arrange panes, run commands across sessions, and inspect terminal output directly.</li>
+                    <li><strong>Local MCP bridge:</strong> Configured in <code>~/.forge/.mcp.json</code> to connect local services (such as <code>metapilot-native</code> over localhost HTTP) directly into the agent toolset.</li>
+                </ul>
+
+                <h3>The ForgeCode harness (<code>~/.forge/.forge.toml</code>)</h3>
+                <p>Out of the box, many coding agents choke when they read a large file or hit a transient API rate limit. My <code>.forge.toml</code> is tuned for high concurrency and resilience: <code>subagents = true</code>, <code>verify_todos = true</code>, <code>max_parallel_file_reads = 64</code>, <code>max_read_lines = 2000</code>, and an exponential backoff retry policy covering HTTP status codes 429 through 529.</p>
+                <p>My default session profile pairs fast OpenRouter inference (<code>z-ai/glm-4.7-flash</code> for low-latency tool dispatch) with automatic context compaction at 100k tokens and a local SQLite conversation store (<code>.forge.db</code>) backed by automatic file snapshots before every mutation.</p>
+            </section>
+
+            <section id="coordination">
+                <h2>02 / How I coordinate agents in the terminal</h2>
+                <p>A single agent with full write permissions on a repository eventually turns into a bull in a china shop: it starts refactoring unrelated files while trying to fix a one-line bug. ForgeCode solves this by splitting responsibilities across three specialized agent personas defined in <code>~/.forge/agents/</code> and letting the parent session dispatch sub-agents in parallel.</p>
+
+                <div class="weblog-company">
+                    <h3>1. Sage / Strictly read-only research &amp; architecture mapping</h3>
+                    <p><strong>Tool access:</strong> <code>sem_search</code>, <code>search</code>, <code>read</code>, and <code>fetch</code>. Zero write, patch, or shell execution tools.</p>
+                    <p><strong>Role in the loop:</strong> When I drop into an unfamiliar repo or need to trace a 19-migration SQL history, I send Sage in first. It maps module relationships, traces data flow, and returns exact <code>filepath:startLine-endLine</code> citations without any risk of mutating the worktree.</p>
+                </div>
+
+                <div class="weblog-company">
+                    <h3>2. Muse / Strategic planning &amp; risk analysis</h3>
+                    <p><strong>Tool access:</strong> Read and search tools plus <code>plan</code> and <code>sage</code> delegation. Cannot modify source files.</p>
+                    <p><strong>Role in the loop:</strong> Muse turns ambiguous feature goals into structured Markdown action plans under <code>plans/</code> with mandatory checkboxes (<code>- [ ]</code>), explicit verification criteria, and alternative trade-offs. An implementation agent can then execute that plan step by step.</p>
+                </div>
+
+                <div class="weblog-company">
+                    <h3>3. Forge / Hands-on implementation &amp; parallel sub-agent dispatch</h3>
+                    <p><strong>Tool access:</strong> Full filesystem mutation (<code>write</code>, <code>patch</code>, <code>multi_patch</code>, <code>remove</code>, <code>undo</code>), <code>shell</code>, <code>todo_write</code>, skills, and the <code>task</code> tool to spawn parallel sub-agents.</p>
+                    <p><strong>Role in the loop:</strong> Forge writes the code, runs the compiler and test suites, and coordinates parallel workers when a feature spans multiple independent modules.</p>
+                </div>
+
+                <p><strong>The golden rule of multi-agent coordination:</strong> Never launch two write-capable agents on the same worktree without partitioning file ownership. Every parallel task prompt I run includes an explicit contract like: <em>"Own ONLY <code>src/worker/index.ts</code> and <code>src/__tests__/worker.test.ts</code>. Preserve uncommitted edits in all other files."</em></p>
+            </section>
+
+            <section id="projects">
+                <h2>03 / What I have worked on so far</h2>
+                <p>Reviewing the repositories in <code>~/Developer</code> and the task history in <code>~/.forge/.forge.db</code> gives a clear picture of what this terminal workflow actually produces across systems networking, mobile apps, local ML inference, and interpretability tooling.</p>
+
+                <div class="weblog-company">
+                    <h3>Salvo (<code>territe</code>) / Delay-controlled UDP bulk file transfer in Go</h3>
+                    <p><strong>What it is:</strong> Classic TCP streams collapse when a long-haul link has both high latency and random packet loss. Built in pure Go with zero third-party dependencies, Salvo pairs a TLS 1.3 control channel (with SHA-256 certificate pinning) and an AES-128-GCM encrypted UDP data channel that paces packets using queuing delay (one-way delay delta) rather than packet loss, repairing gaps via selective NACK bitmaps and zero-copy <code>mmap</code> file I/O.</p>
+                    <p><strong>Measured results:</strong> <strong>1.2 Gbit/s</strong> encrypted throughput over loopback on a 1.5 GB payload with full SHA-256 verification, and <strong>348–438 Mbit/s</strong> through its built-in userspace WAN emulator (<code>salvo impair</code>) across 50–300 ms RTT paths with 1–3% random packet loss—scenarios where a single classic loss-based TCP stream drops below 3 Mbit/s.</p>
+                </div>
+
+                <div class="weblog-company">
+                    <h3>Charms (<code>Mine</code>) / Digital wardrobe &amp; social marketplace</h3>
+                    <p><strong>What it is:</strong> A full-stack React Native (Expo Router), Zustand, PostgreSQL (19+ RLS migrations), and Supabase Edge Functions app for cataloging a personal closet, planning outfits on a calendar, and trading items.</p>
+                    <p><strong>How parallel agents built it:</strong> While a read-only agent audited the 2025–2026 SQL migration chain, parallel implementation agents built the <code>security_private.content_admin_roles</code> SQL migration, the typed <code>adminContentService.ts</code> client, transactional <code>psql</code> security tests, and the React Native <code>AdminContentBrowser</code> UI—each owning disjoint files. Separate parallel runs replaced legacy vision classification with a Cloudflare Workers AI (<code>Clef</code>) fashion pipeline, migrated deep links from <code>mine://</code> to <code>charms://</code>, enforced default-off notification privacy, and codified database deployment rules into a reusable <code>maintain-supabase</code> skill.</p>
+                </div>
+
+                <div class="weblog-company">
+                    <h3>Slize / Hand-drawn NYC craft cocktail notebook &amp; shift game</h3>
+                    <p><strong>What it is:</strong> An interactive cocktail journal and playable NYC neighborhood bartender shift game built with Expo, React Native Reanimated, <code>Rough.js</code>, and a Cloudflare Worker recipe backend.</p>
+                    <p><strong>How agents shaped it:</strong> When an early pass drifted toward generic rounded SaaS cards, I used scoped file-ownership tasks to strip out the boilerplate and rebuild the UI around <code>Rough.js</code> vector hachures, Courier typography, paper textures, and a 120Hz physics-driven Cocktail Dial with haptic ticks, alongside an offline bartender shift game (<code>pour.tsx</code>, <code>bartenderGame.ts</code>) and a freestyle home-bar matcher.</p>
+                </div>
+
+                <div class="weblog-company">
+                    <h3><a href="https://github.com/VictorXLR/z-image-turbo">Turbo-Term</a> &amp; Flux-UI / Local Apple Silicon image generation</h3>
+                    <p><strong>What they are:</strong> Two zero-API-cost creative tools built for the M4 Pro's 48 GB unified memory.</p>
+                    <p><strong>How they work:</strong> <strong>Turbo-Term (<code>z-image-turbo</code>)</strong> runs <code>Tongyi-MAI/Z-Image-Turbo</code> and renders images inline inside Ghostty via the Kitty graphics protocol, backed by single-keystroke hotkeys for seed variations, 2x re-renders, and a persistent <code>mlx_worker.py</code> subprocess that keeps quantized <code>mflux</code> weights warm between prompts. <strong>Flux-UI</strong> pairs a custom <code>tldraw</code> infinite canvas with a local FastAPI + PyTorch MPS backend running 4-step distilled <code>FLUX.2-klein-9B</code> for visual text-to-image and image-to-image node chaining.</p>
+                </div>
+
+                <h3>Smaller research builds and native utilities</h3>
+                <ul>
+                    <li><strong>vector-state (<code>outmen</code>):</strong> Reads an LLM's residual stream using <code>transformer-lens</code> and Sparse Autoencoders (<code>sae-lens</code>) and renders internal activation states as crisp pictogram signage.</li>
+                    <li><strong>HRM browser RL &amp; Neural ASM:</strong> Recurrent two-timescale actor-critic models (<code>hrm-game</code>) running in Web Workers with TensorFlow.js for Doom, Pac-Man, and Flappy Bird, plus a differentiable CPU-like reference executor (<code>neural_asm.py</code>) and multiscale city ecosystem simulations (<code>ai/stem</code>).</li>
+                    <li><strong>oopa:</strong> A single-binary Go clone of Magic Todo that serves both a full-screen terminal UI and an embedded local web server, recursively breaking overwhelming tasks into small steps against a local LM Studio model.</li>
+                    <li><strong>bitchat-bot:</strong> A Swift bot supporting Nostr WebSocket relays, cryptographic event signing, and offline command responders, built by running transport and responder agents in parallel.</li>
+                    <li><strong>btcd:</strong> A zero-bundler WebAssembly runner with a custom binary LEB128 section inspector and hand-written <code>.wat</code> demos (image-guided Conway's Game of Life, Tetris, Mandelbrot).</li>
+                    <li><strong>Tree Hugger, After Party &amp; VoiceInk:</strong> Native iOS/macOS Swift apps—from clustering 700,000 NYC street trees via Socrata to a privacy-first social memory log and a custom-patched local build of VoiceInk.</li>
+                </ul>
+            </section>
+
+            <section id="lessons">
+                <h2>04 / What breaks and how to keep it sane</h2>
+                <p>Coordinating agents in the terminal is a massive multiplier, but it is not magic. When a session goes sideways, it is almost always for one of four reasons—and each has a mechanical fix:</p>
+                <ol>
+                    <li><strong>Concurrent migration and lockfile collisions.</strong> When two backend agents create a timestamped SQL migration at the same time, they will pick the same sequence number (like <code>20261008000016</code>). Fix: assign exact migration numbers in the parent prompt and tell sub-agents to run <code>deno test --no-lock</code> so they don't fight over root lockfiles.</li>
+                    <li><strong>Aesthetic drift toward generic templates.</strong> Left to their own devices, coding models love turning distinctive interfaces into generic rounded-card dashboards. Fix: reject generic passes immediately, write down the visual invariants (e.g., "Rough.js ink frames, Courier text, paper surfaces only"), and lock the agent to a single screen component at a time.</li>
+                    <li><strong>Environment drift between local runtimes.</strong> Cutting-edge ML packages rarely agree on Python versions (<code>mflux</code> wants Python 3.14 and <code>pillow&lt;13</code>; PyTorch/diffusers wants Python 3.12). Fix: document the boundary in an <code>AGENTS.md</code> file at the repo root and bridge the two environments over a clean stdin/stdout JSON worker rather than forcing them into one broken virtualenv.</li>
+                    <li><strong>Silent state corruption on failure.</strong> Agents often write happy-path persistence that overwrites saved user state with defaults when hydration fails. Fix: pair every implementation task with a dedicated read-only review agent whose only job is to hunt for race conditions, stale route callbacks, and destructive error handlers.</li>
+                </ol>
+                <p>That is the real takeaway from 400+ sessions on this stack: AI agents work best when you treat them like Unix processes. Give them a fast terminal, narrow responsibilities, explicit file contracts, and a test suite that doesn't lie.</p>
+            </section>
+
+            <section id="sources" class="weblog-sources">
+                <h2>System files and project links</h2>
+                <p>Reviewed directly from my local workstation and public repositories on November 22, 2026.</p>
+                <ul>
+                    <li><a href="https://forgecode.dev">ForgeCode: terminal-native AI agent harness</a></li>
+                    <li><a href="https://github.com/VictorXLR/z-image-turbo">VictorXLR/z-image-turbo (Turbo-Term): terminal image generation on Apple MLX &amp; PyTorch</a></li>
+                    <li><a href="https://github.com/VictorXLR/cortex">VictorXLR/cortex: Rust / OS systems experiments</a></li>
+                    <li><a href="https://github.com/VictorXLR/fastvlm-video">VictorXLR/fastvlm-video: TypeScript &amp; WebGPU vision-language inference</a></li>
+                    <li><a href="https://github.com/VictorXLR/secretchat">VictorXLR/secretchat: security-focused messaging experiments</a></li>
+                    <li><a href="home-upgrades-2026.html">Weblog 001: A better home in 2026: infrastructure before gadgets</a></li>
+                </ul>
+            </section>
+            <footer class="weblog-end">
+                <p>Building terminal-native agent workflows or local ML tools?</p>
+                <a href="mailto:victorxlr007@gmail.com?subject=ForgeCode%20and%20terminal%20agents">Send a note or compare setups</a>
+                <p><a href="index.html#weblog">Back to the weblog</a></p>
+            </footer>
+        </article>
+    </main>
+</body>
+</html>
