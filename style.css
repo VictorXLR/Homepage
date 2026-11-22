@@ -446,6 +446,21 @@ body {
     body:not(.weblog-page) .nav-links {
         flex-wrap: wrap;
     }
+
+    /* Keep the BG widget in the top row beside the logo */
+    body:not(.weblog-page) .nav-logo {
+        order: 0;
+    }
+
+    body:not(.weblog-page) .color-picker-widget {
+        order: 1;
+        margin-left: auto;
+    }
+
+    body:not(.weblog-page) .nav-links {
+        order: 2;
+        width: 100%;
+    }
 }
 
 /* Footer */
